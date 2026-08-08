@@ -111,6 +111,10 @@ function ClaimsAssistant() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  useEffect(() => {
+    if (!customerId && customers.length > 0) setCustomerId(customers[0]!.id);
+  }, [customerId, customers]);
+
   const activeCustomer = customers.find((c) => c.id === customerId);
 
   const transport = useMemo(
