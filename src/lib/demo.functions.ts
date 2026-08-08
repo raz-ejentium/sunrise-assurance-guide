@@ -1,7 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 
-// Member, policy and escalation data is no longer readable with the public key.
-// These server functions read it with the trusted server-only client.
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+// Member, policy and escalation data is no longer readable with the public key,
+// and these server functions require an authenticated staff session before
+// reading it with the trusted server-only client.
 async function serverClient() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
