@@ -73,18 +73,41 @@ export async function resolveTreatment(query: string) {
     return { matched: true as const, confidence: "high" as const, treatment: exact };
   }
 
+  const synonyms: Record<string, string[]> = {
+    "T-ARTH-KNEE": ["keyhole", "arthroscopy", "arthroscopic", "knee", "meniscus"],
+    "T-BARIATRIC": ["bariatric", "gastric", "sleeve", "bypass", "weight", "obesity", "stomach"],
+    "T-APPEND": ["appendectomy", "appendix", "appendicitis"],
+    "T-CARDIAC-STENT": ["angioplasty", "stent", "coronary", "heart", "cardiac"],
+    "T-MATERNITY": ["maternity", "delivery", "birth", "childbirth", "caesarean", "csection"],
+    "T-DENTAL-SURG": ["dental", "tooth", "teeth", "extraction", "wisdom"],
+    "T-PHYSIO": ["physiotherapy", "physio", "rehabilitation", "rehab"],
+  };
+
   const tokens = needle.split(/[^a-z0-9]+/).filter((t) => t.length > 3);
   const scored = all
     .map((t) => {
       const haystack = `${t.description} ${t.category} ${t.treatment_code}`.toLowerCase();
-      const score = tokens.filter((tok) => haystack.includes(tok)).length;
+      const keywords = synonyms[t.treatment_code] ?? [];
+      // Keyword hits are weighted above generic description words like "surgery",
+      // so a shared category term can never outrank a specific clinical match.
+      const score = tokens.reduce((sum, tok) => {
+        if (keywords.some((k) => k.includes(tok) || tok.includes(k))) return sum + 3;
+        return haystack.includes(tok) ? sum + 1 : sum;
+      }, 0);
       return { t, score };
     })
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  if (scored.length === 1 && scored[0]!.score >= 1) {
-    return { matched: true as const, confidence: "medium" as const, treatment: scored[0]!.t };
+  const top = scored[0];
+  const runnerUp = scored[1];
+
+  if (top && (!runnerUp || top.score > runnerUp.score)) {
+    return {
+      matched: true as const,
+      confidence: (top.score >= 3 ? "high" : "medium") as "high" | "medium",
+      treatment: top.t,
+    };
   }
 
   if (scored.length > 1) {
@@ -95,6 +118,7 @@ export async function resolveTreatment(query: string) {
       note: "Several treatments could match this description. Ask the customer one clarifying question; if it is still ambiguous, escalate — do not pick one.",
     };
   }
+
 
   return {
     matched: false as const,
