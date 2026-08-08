@@ -231,7 +231,7 @@ function SessionBar({
   customers: DemoCustomer[];
   customerId: string;
   onCustomerChange: (id: string) => void;
-  activeCustomer?: DemoCustomer;
+  activeCustomer: DemoCustomer | undefined;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
