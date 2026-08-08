@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DecisionLogRouteImport } from './routes/decision-log'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionLogRoute = DecisionLogRouteImport.update({
+  id: '/decision-log',
+  path: '/decision-log',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InboxRoute = InboxRouteImport.update({
@@ -31,30 +37,34 @@ const ApiChatRoute = ApiChatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/decision-log': typeof DecisionLogRoute
   '/inbox': typeof InboxRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/decision-log': typeof DecisionLogRoute
   '/inbox': typeof InboxRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/decision-log': typeof DecisionLogRoute
   '/inbox': typeof InboxRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/inbox' | '/api/chat'
+  fullPaths: '/' | '/decision-log' | '/inbox' | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/inbox' | '/api/chat'
-  id: '__root__' | '/' | '/inbox' | '/api/chat'
+  to: '/' | '/decision-log' | '/inbox' | '/api/chat'
+  id: '__root__' | '/' | '/decision-log' | '/inbox' | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DecisionLogRoute: typeof DecisionLogRoute
   InboxRoute: typeof InboxRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decision-log': {
+      id: '/decision-log'
+      path: '/decision-log'
+      fullPath: '/decision-log'
+      preLoaderRoute: typeof DecisionLogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inbox': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DecisionLogRoute: DecisionLogRoute,
   InboxRoute: InboxRoute,
   ApiChatRoute: ApiChatRoute,
 }
