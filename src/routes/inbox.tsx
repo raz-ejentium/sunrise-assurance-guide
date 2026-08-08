@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
 
 import { listEscalations } from "@/lib/demo.functions";
+import { AuthGate } from "@/components/auth/AuthGate";
 
 const escalationsQuery = queryOptions({
   queryKey: ["escalations"],
@@ -11,7 +12,6 @@ const escalationsQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/inbox")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(escalationsQuery),
   head: () => ({
     meta: [
       { title: "Escalation Inbox | Sunrise Assurance Claims" },
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/inbox")({
       },
     ],
   }),
-  component: InboxPage,
+  component: InboxRoute,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-8 text-sm text-destructive">
       {error.message}
@@ -46,8 +46,16 @@ const REASON_LABELS: Record<string, string> = {
   out_of_scope: "Out of scope",
 };
 
+function InboxRoute() {
+  return (
+    <AuthGate>
+      <InboxPage />
+    </AuthGate>
+  );
+}
+
 function InboxPage() {
-  const { data: escalations } = useSuspenseQuery(escalationsQuery);
+  const { data: escalations = [] } = useQuery(escalationsQuery);
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-8">

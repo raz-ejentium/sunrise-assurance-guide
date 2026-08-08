@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useQuery, queryOptions } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { ArrowUp, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { listCustomers, type DemoCustomer } from "@/lib/demo.functions";
+import { AuthGate } from "@/components/auth/AuthGate";
+import { supabase } from "@/integrations/supabase/client";
 import { EscalationCard, type EscalationOutput } from "@/components/claims/EscalationCard";
 import { TracePanel, type TraceEntry } from "@/components/claims/TracePanel";
 import {
@@ -24,7 +26,6 @@ const customersQuery = queryOptions({
 });
 
 export const Route = createFileRoute("/")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(customersQuery),
   head: () => ({
     meta: [
       { title: "Claims Initiation Assistant | Sunrise Assurance" },
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: ClaimsAssistant,
+  component: ClaimsAssistantPage,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-8 text-sm text-destructive">
       {error.message}
@@ -95,12 +96,24 @@ function isToolPart(part: { type: string }): boolean {
   return part.type.startsWith("tool-");
 }
 
+function ClaimsAssistantPage() {
+  return (
+    <AuthGate>
+      <ClaimsAssistant />
+    </AuthGate>
+  );
+}
+
 function ClaimsAssistant() {
-  const { data: customers } = useSuspenseQuery(customersQuery);
+  const { data: customers = [] } = useQuery(customersQuery);
   const [customerId, setCustomerId] = useState<string>(customers[0]?.id ?? "");
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!customerId && customers.length > 0) setCustomerId(customers[0]!.id);
+  }, [customerId, customers]);
 
   const activeCustomer = customers.find((c) => c.id === customerId);
 
@@ -108,6 +121,11 @@ function ClaimsAssistant() {
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
+        headers: async () => {
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        },
         body: () => ({
           customerId,
           customerName: customers.find((c) => c.id === customerId)?.name ?? null,

@@ -1,7 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 
-// Member, policy and escalation data is no longer readable with the public key.
-// These server functions read it with the trusted server-only client.
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+// Member, policy and escalation data is no longer readable with the public key,
+// and these server functions require an authenticated staff session before
+// reading it with the trusted server-only client.
 async function serverClient() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
@@ -14,7 +17,9 @@ export type DemoCustomer = {
   policies: { id: string; policy_type: string; status: string }[];
 };
 
-export const listCustomers = createServerFn({ method: "GET" }).handler(async () => {
+export const listCustomers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
   const supabase = await serverClient();
   const { data: customers, error } = await supabase
     .from("customers")
@@ -35,7 +40,9 @@ export const listCustomers = createServerFn({ method: "GET" }).handler(async () 
   })) satisfies DemoCustomer[];
 });
 
-export const listEscalations = createServerFn({ method: "GET" }).handler(async () => {
+export const listEscalations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
   const supabase = await serverClient();
   const { data, error } = await supabase
     .from("escalations")
