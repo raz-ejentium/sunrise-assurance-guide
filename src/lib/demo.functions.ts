@@ -15,7 +15,7 @@ export type DemoCustomer = {
 };
 
 export const listCustomers = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = serverClient();
+  const supabase = await serverClient();
   const { data: customers, error } = await supabase
     .from("customers")
     .select("id, name, member_since")
@@ -36,7 +36,7 @@ export const listCustomers = createServerFn({ method: "GET" }).handler(async () 
 });
 
 export const listEscalations = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = serverClient();
+  const supabase = await serverClient();
   const { data, error } = await supabase
     .from("escalations")
     .select(
