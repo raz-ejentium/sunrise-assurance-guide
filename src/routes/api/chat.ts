@@ -152,7 +152,11 @@ export const Route = createFileRoute("/api/chat")({
           messages: await convertToModelMessages(messages as UIMessage[]),
           tools,
           stopWhen: stepCountIs(50),
+          onError: ({ error }) => {
+            console.error("[claims-agent] stream error", error);
+          },
         });
+
 
         const response = result.toUIMessageStreamResponse({
           originalMessages: messages as UIMessage[],
