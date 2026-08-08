@@ -17,7 +17,9 @@ export type DemoCustomer = {
   policies: { id: string; policy_type: string; status: string }[];
 };
 
-export const listCustomers = createServerFn({ method: "GET" }).handler(async () => {
+export const listCustomers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
   const supabase = await serverClient();
   const { data: customers, error } = await supabase
     .from("customers")
@@ -38,7 +40,9 @@ export const listCustomers = createServerFn({ method: "GET" }).handler(async () 
   })) satisfies DemoCustomer[];
 });
 
-export const listEscalations = createServerFn({ method: "GET" }).handler(async () => {
+export const listEscalations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
   const supabase = await serverClient();
   const { data, error } = await supabase
     .from("escalations")
