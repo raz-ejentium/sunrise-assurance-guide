@@ -14,7 +14,225 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      customers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          member_since: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          member_since: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          member_since?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      document_requirements: {
+        Row: {
+          documents: string[]
+          id: string
+          policy_type: string
+          treatment_code: string
+        }
+        Insert: {
+          documents: string[]
+          id?: string
+          policy_type: string
+          treatment_code: string
+        }
+        Update: {
+          documents?: string[]
+          id?: string
+          policy_type?: string
+          treatment_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_requirements_treatment_code_fkey"
+            columns: ["treatment_code"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["treatment_code"]
+          },
+        ]
+      }
+      escalations: {
+        Row: {
+          conversation_summary: string
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          id: string
+          reason: string
+          reason_code: string
+          reference_number: string
+          status: string
+          what_could_not_be_determined: string | null
+          what_was_determined: string | null
+        }
+        Insert: {
+          conversation_summary: string
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          id?: string
+          reason: string
+          reason_code: string
+          reference_number: string
+          status?: string
+          what_could_not_be_determined?: string | null
+          what_was_determined?: string | null
+        }
+        Update: {
+          conversation_summary?: string
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          id?: string
+          reason?: string
+          reason_code?: string
+          reference_number?: string
+          status?: string
+          what_could_not_be_determined?: string | null
+          what_was_determined?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policies: {
+        Row: {
+          annual_limit: number
+          created_at: string
+          currency: string
+          customer_id: string
+          effective_date: string
+          id: string
+          insurer_name: string
+          policy_type: string
+          status: string
+        }
+        Insert: {
+          annual_limit: number
+          created_at?: string
+          currency?: string
+          customer_id: string
+          effective_date: string
+          id: string
+          insurer_name: string
+          policy_type: string
+          status: string
+        }
+        Update: {
+          annual_limit?: number
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          effective_date?: string
+          id?: string
+          insurer_name?: string
+          policy_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policies_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_coverage: {
+        Row: {
+          covered: boolean
+          exclusion_note: string | null
+          id: string
+          policy_id: string
+          pre_auth_required: boolean
+          requires_rider: boolean
+          rider_held: boolean | null
+          treatment_code: string
+          waiting_period_months: number
+        }
+        Insert: {
+          covered: boolean
+          exclusion_note?: string | null
+          id?: string
+          policy_id: string
+          pre_auth_required?: boolean
+          requires_rider?: boolean
+          rider_held?: boolean | null
+          treatment_code: string
+          waiting_period_months?: number
+        }
+        Update: {
+          covered?: boolean
+          exclusion_note?: string | null
+          id?: string
+          policy_id?: string
+          pre_auth_required?: boolean
+          requires_rider?: boolean
+          rider_held?: boolean | null
+          treatment_code?: string
+          waiting_period_months?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_coverage_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_coverage_treatment_code_fkey"
+            columns: ["treatment_code"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["treatment_code"]
+          },
+        ]
+      }
+      treatments: {
+        Row: {
+          category: string
+          description: string
+          pre_auth_typically_required: boolean
+          treatment_code: string
+        }
+        Insert: {
+          category: string
+          description: string
+          pre_auth_typically_required?: boolean
+          treatment_code: string
+        }
+        Update: {
+          category?: string
+          description?: string
+          pre_auth_typically_required?: boolean
+          treatment_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
