@@ -51,6 +51,12 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const { verifyBearerToken } = await import("@/lib/auth.server");
+        const caller = await verifyBearerToken(request);
+        if (!caller) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
         const body = (await request.json()) as ChatRequestBody;
         const messages = body.messages;
         if (!Array.isArray(messages)) {
