@@ -186,7 +186,10 @@ function ClaimsAssistant() {
     [isLoading, sendMessage],
   );
 
-  const [pending, setPending] = useState<{ customerId: string; prompt: string } | null>(null);
+  const [pending, setPending] = useState<
+    { runId: string; customerId: string; prompt: string } | null
+  >(null);
+  const sentRunRef = useRef<string | null>(null);
 
   const runScenario = useCallback(
     (scenario: Scenario) => {
@@ -194,18 +197,28 @@ function ClaimsAssistant() {
       setInput("");
       setCustomerId(scenario.customerId);
       setMessages([]);
-      setPending({ customerId: scenario.customerId, prompt: scenario.prompt });
+      setPending({
+        runId: `${scenario.key}-${Date.now()}`,
+        customerId: scenario.customerId,
+        prompt: scenario.prompt,
+      });
     },
     [isLoading, setMessages],
   );
 
   // Send only once the chat session has been rebuilt for the scenario's member,
   // otherwise the member switch tears down the instance and drops the message.
+  // The ref guard keeps a re-run of this effect from starting a second stream,
+  // which would abort the first and leave a half-finished conversation.
   useEffect(() => {
     if (!pending || pending.customerId !== customerId) return;
+    if (sentRunRef.current === pending.runId) return;
+    sentRunRef.current = pending.runId;
+    const prompt = pending.prompt;
     setPending(null);
-    void sendMessage({ text: pending.prompt });
+    void sendMessage({ text: prompt });
   }, [pending, customerId, sendMessage]);
+
 
   const scenarios: Scenario[] = useMemo(
     () =>

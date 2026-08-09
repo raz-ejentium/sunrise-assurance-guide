@@ -40,13 +40,27 @@ export const Route = createFileRoute("/inbox")({
 });
 
 const REASON_LABELS: Record<string, string> = {
+  conflicting_policy_coverage: "Conflicting policy coverage",
   conflicting_policies: "Conflicting policies",
   unknown_treatment: "Unknown treatment",
+  ambiguous_identity: "Ambiguous identity",
   ambiguous_coverage: "Ambiguous coverage",
+  inside_waiting_period: "Inside waiting period",
+  rider_status_unknown: "Rider status unknown",
+  policy_not_active: "Policy not active",
   policy_inactive: "Policy inactive",
+  missing_reference_data: "Missing reference data",
   customer_request: "Member asked for a human",
   out_of_scope: "Out of scope",
 };
+
+function reasonLabel(code: string): string {
+  const known = REASON_LABELS[code];
+  if (known) return known;
+  const words = code.replace(/[_-]+/g, " ").trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : code;
+}
+
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   open: { label: "Open", className: "border-warning/40 bg-warning/10 text-warning" },
@@ -78,9 +92,9 @@ function SummaryBar({ items }: { items: { reason_code: string }[] }) {
   const total = items.length;
   const single = breakdown.length === 1 && breakdown[0];
   const summary = single
-    ? `${total === 2 ? "both" : "all"} triggered by ${REASON_LABELS[single[0]] ?? single[0]}`
+    ? `${total === 2 ? "both" : "all"} triggered by ${reasonLabel(single[0])}`
     : breakdown
-        .map(([code, count]) => `${count} ${REASON_LABELS[code] ?? code}`)
+        .map(([code, count]) => `${count} ${reasonLabel(code)}`)
         .join(" · ");
 
   return (
@@ -142,7 +156,7 @@ function InboxPage() {
                   {item.reference_number}
                 </span>
                 <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[11px] font-medium text-warning">
-                  {REASON_LABELS[item.reason_code] ?? item.reason_code}
+                  {reasonLabel(item.reason_code)}
                 </span>
                 <StatusBadge status={item.status} />
 
