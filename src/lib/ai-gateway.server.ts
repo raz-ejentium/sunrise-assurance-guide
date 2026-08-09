@@ -2,6 +2,87 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
 const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
 
+/**
+ * The upstream model occasionally returns a 200 stream that carries no content
+ * at all (`finish_reason: "no_content"`, zero tokens). The AI SDK treats that as
+ * a legitimate empty step, so the agent loop stops mid-run and the user sees a
+ * conversation that halts after a tool call. Peek at the stream: if the whole
+ * response turns out to be empty, transparently re-issue the request.
+ */
+const EMPTY_COMPLETION_RETRIES = 2;
+
+function isMeaningfulSseChunk(text: string): boolean {
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("data:")) continue;
+    const payload = line.slice(5).trim();
+    if (!payload || payload === "[DONE]") continue;
+    try {
+      const parsed = JSON.parse(payload) as {
+        choices?: { delta?: { content?: string | null; tool_calls?: unknown } }[];
+      };
+      for (const choice of parsed.choices ?? []) {
+        const delta = choice.delta;
+        if (!delta) continue;
+        if (typeof delta.content === "string" && delta.content.length > 0) return true;
+        if (delta.tool_calls) return true;
+      }
+    } catch {
+      // Ignore partial JSON; the next chunk will complete it.
+    }
+  }
+  return false;
+}
+
+/**
+ * Reads from the stream until it sees real content. Returns the buffered chunks
+ * plus the reader when the response is usable, or `null` when it was empty.
+ */
+async function peekForContent(response: Response): Promise<
+  | { buffered: Uint8Array[]; reader: ReadableStreamDefaultReader<Uint8Array> }
+  | null
+> {
+  if (!response.body) return null;
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const buffered: Uint8Array[] = [];
+
+  while (true) {
+    const chunk = await reader.read();
+    if (chunk.done) {
+      return null;
+    }
+    buffered.push(chunk.value);
+    if (isMeaningfulSseChunk(decoder.decode(chunk.value, { stream: true }))) {
+      return { buffered, reader };
+    }
+  }
+}
+
+function replayStream(
+  buffered: Uint8Array[],
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+): ReadableStream<Uint8Array> {
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        for (const chunk of buffered) controller.enqueue(chunk);
+        while (true) {
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          controller.enqueue(chunk.value);
+        }
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+    cancel(reason?: unknown) {
+      return reader.cancel(reason);
+    },
+  });
+}
+
+
 export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
   let runId = initialRunId?.trim() || undefined;
   let resolveRunId: (value: string | undefined) => void = () => {};
