@@ -678,7 +678,8 @@ function Composer({
   isLoading,
   scenarios,
   onScenario,
-  activeCustomerId,
+  activeScenarioKey,
+  labelMode,
 }: {
   ref: React.Ref<HTMLTextAreaElement>;
   value: string;
@@ -687,26 +688,23 @@ function Composer({
   isLoading: boolean;
   scenarios: Scenario[];
   onScenario: (scenario: Scenario) => void;
-  activeCustomerId: string;
+  activeScenarioKey: string;
+  labelMode: LabelMode;
 }) {
   return (
     <div className="border-t border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="mx-auto max-w-3xl">
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="label-caps mr-1 text-muted-foreground">Switch member scenario</span>
+          <span className="label-caps mr-1 text-muted-foreground">Switch scenario</span>
           {scenarios.map((scenario) => {
-            const isActive = scenario.customerId === activeCustomerId;
+            const isActive = scenario.key === activeScenarioKey;
             return (
               <button
                 key={scenario.key}
                 type="button"
                 disabled={isLoading}
                 aria-current={isActive ? "true" : undefined}
-                title={
-                  scenario.memberName
-                    ? `Runs as ${scenario.memberName} — ${scenario.hint}`
-                    : scenario.hint
-                }
+                title={`${formatMember(labelMode, scenario.customerId, scenario.memberName)} — ${scenario.hint}`}
                 onClick={() => onScenario(scenario)}
                 className={`rounded-full border px-2.5 py-1 text-[11.5px] transition-colors disabled:opacity-50 ${
                   isActive
@@ -714,10 +712,19 @@ function Composer({
                     : "border-border bg-card text-muted-foreground hover:border-accent hover:text-foreground"
                 }`}
               >
-                <span className="font-mono">{scenario.customerId}</span>
-                {scenario.memberName ? ` · ${scenario.memberName}` : ""}
+                {labelMode === "name" ? (
+                  scenario.memberName
+                ) : (
+                  <>
+                    <span className="font-mono">{scenario.customerId}</span>
+                    {labelMode === "both" && scenario.memberName
+                      ? ` · ${scenario.memberName}`
+                      : ""}
+                  </>
+                )}
                 <span className="hidden sm:inline"> — {scenario.label.toLowerCase()}</span>
               </button>
+
             );
           })}
 
