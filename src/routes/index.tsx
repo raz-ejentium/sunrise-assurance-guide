@@ -355,9 +355,12 @@ function ClaimsAssistant() {
           customers={customers}
           customerId={customerId}
           onCustomerChange={(id) => {
+            if (id === customerId) return;
             setCustomerId(id);
-            setInput("");
+            // Scenarios are member-specific, so the thread resets with the member.
+            resetConversation();
           }}
+
           activeCustomer={activeCustomer}
           onReset={resetConversation}
           canReset={messages.length > 0}
