@@ -382,6 +382,12 @@ const SUBMISSION_CHANNELS: Record<
       "Submit in the Sunrise Assurance mobile app under 'Claims > Start a claim', photographing each required document in good light.",
     turnaround: "5-7 business days once complete documents are received.",
   },
+  "dental care plan": {
+    channel: "app",
+    method:
+      "Submit in the Sunrise Assurance mobile app under 'Claims > Dental', attaching the dentist-completed claim form and X-rays.",
+    turnaround: "5-7 business days once complete documents are received.",
+  },
 };
 
 const BRANCH_FALLBACK = {

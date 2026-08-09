@@ -60,36 +60,56 @@ type Scenario = {
   memberName?: string;
 };
 
+// The demo runs as a single member; every scenario is produced by this
+// member's own seeded policy data rather than by swapping identities.
+const DEMO_CUSTOMER_ID = "CUST-001";
+
+type LabelMode = "id" | "name" | "both";
+
+const LABEL_MODES: { value: LabelMode; label: string }[] = [
+  { value: "id", label: "ID" },
+  { value: "name", label: "Name" },
+  { value: "both", label: "Both" },
+];
+
+const LABEL_MODE_STORAGE_KEY = "claims-demo-label-mode";
+
+function formatMember(mode: LabelMode, id: string, name?: string) {
+  if (mode === "id" || !name) return id;
+  if (mode === "name") return name;
+  return `${id} · ${name}`;
+}
 
 const SCENARIOS: Scenario[] = [
   {
     key: "happy",
     label: "Happy path",
-    hint: "One active policy — appendectomy is cleanly covered",
-    customerId: "CUST-002",
+    hint: "Angioplasty — covered outright by the personal medical card",
+    customerId: DEMO_CUSTOMER_ID,
     prompt:
-      "I had an emergency appendectomy at Gleneagles last Tuesday. What do I need to do to claim?",
+      "I had a coronary angioplasty with a stent fitted at Gleneagles last Tuesday. What do I need to do to claim?",
   },
   {
     key: "boundary",
     label: "Coverage boundary",
-    hint: "Two policies that conflict on bariatric surgery — must escalate",
-    customerId: "CUST-001",
+    hint: "Bariatric surgery — two policies disagree, rider status unconfirmed",
+    customerId: DEMO_CUSTOMER_ID,
     prompt:
       "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
   },
   {
     key: "waiting",
     label: "Waiting period",
-    hint: "Policy too new for knee surgery",
-    customerId: "CUST-003",
-    prompt: "I need keyhole surgery on my knee next month. Can I claim for it?",
+    hint: "Dental surgery — only the new dental plan covers it, and it's still in waiting",
+    customerId: DEMO_CUSTOMER_ID,
+    prompt:
+      "I need a surgical extraction of an impacted wisdom tooth next month. Can I claim for it?",
   },
   {
     key: "unknown",
     label: "Unknown treatment",
-    hint: "Asks about a treatment absent from the reference table",
-    customerId: "CUST-004",
+    hint: "Cornea transplant — absent from the treatment reference table",
+    customerId: DEMO_CUSTOMER_ID,
     prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
   },
 ];
@@ -109,10 +129,23 @@ function ClaimsAssistantPage() {
 
 function ClaimsAssistant() {
   const { data: customers = [] } = useQuery(customersQuery);
-  const [customerId, setCustomerId] = useState<string>(customers[0]?.id ?? "");
+  const [customerId, setCustomerId] = useState<string>(DEMO_CUSTOMER_ID);
   const [input, setInput] = useState("");
+  const [labelMode, setLabelMode] = useState<LabelMode>("both");
+  const [activeScenarioKey, setActiveScenarioKey] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Read after hydration so server and client render the same first pass.
+  useEffect(() => {
+    const stored = window.localStorage.getItem(LABEL_MODE_STORAGE_KEY);
+    if (stored === "id" || stored === "name" || stored === "both") setLabelMode(stored);
+  }, []);
+
+  const changeLabelMode = useCallback((mode: LabelMode) => {
+    setLabelMode(mode);
+    window.localStorage.setItem(LABEL_MODE_STORAGE_KEY, mode);
+  }, []);
 
   useEffect(() => {
     if (!customerId && customers.length > 0) setCustomerId(customers[0]!.id);
@@ -197,6 +230,7 @@ function ClaimsAssistant() {
       if (isLoading) return;
       setInput("");
       setCustomerId(scenario.customerId);
+      setActiveScenarioKey(scenario.key);
       setMessages([]);
       setPending({
         runId: `${scenario.key}-${Date.now()}`,
@@ -224,6 +258,7 @@ function ClaimsAssistant() {
     setMessages([]);
     setInput("");
     setPending(null);
+    setActiveScenarioKey("");
     sentRunRef.current = null;
     inputRef.current?.focus();
   }, [setMessages]);
@@ -252,12 +287,24 @@ function ClaimsAssistant() {
           onReset={resetConversation}
           canReset={messages.length > 0}
           resetDisabled={isLoading}
+          labelMode={labelMode}
+          onLabelModeChange={changeLabelMode}
+          scenarios={scenarios}
+          activeScenarioKey={activeScenarioKey}
+          onScenario={runScenario}
+          scenarioDisabled={isLoading}
         />
+
 
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
           <div className="mx-auto max-w-3xl">
             {messages.length === 0 ? (
-              <EmptyState scenarios={scenarios} onRun={runScenario} disabled={isLoading} />
+              <EmptyState
+                scenarios={scenarios}
+                onRun={runScenario}
+                disabled={isLoading}
+                labelMode={labelMode}
+              />
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
@@ -277,7 +324,8 @@ function ClaimsAssistant() {
           isLoading={isLoading}
           scenarios={scenarios}
           onScenario={runScenario}
-          activeCustomerId={customerId}
+          activeScenarioKey={activeScenarioKey}
+          labelMode={labelMode}
 
         />
       </section>
@@ -298,6 +346,12 @@ function SessionBar({
   onReset,
   canReset,
   resetDisabled,
+  labelMode,
+  onLabelModeChange,
+  scenarios,
+  activeScenarioKey,
+  onScenario,
+  scenarioDisabled,
 }: {
   customers: DemoCustomer[];
   customerId: string;
@@ -306,7 +360,14 @@ function SessionBar({
   onReset: () => void;
   canReset: boolean;
   resetDisabled: boolean;
+  labelMode: LabelMode;
+  onLabelModeChange: (mode: LabelMode) => void;
+  scenarios: Scenario[];
+  activeScenarioKey: string;
+  onScenario: (scenario: Scenario) => void;
+  scenarioDisabled: boolean;
 }) {
+  const activeScenario = scenarios.find((s) => s.key === activeScenarioKey);
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="flex items-center gap-2.5">
@@ -318,12 +379,69 @@ function SessionBar({
           <SelectContent>
             {customers.map((customer) => (
               <SelectItem key={customer.id} value={customer.id}>
-                <span className="font-mono">{customer.id}</span> · {customer.name}
+                {labelMode === "name" ? (
+                  customer.name
+                ) : (
+                  <>
+                    <span className="font-mono">{customer.id}</span>
+                    {labelMode === "both" && ` · ${customer.name}`}
+                  </>
+                )}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
+
+      <div className="flex items-center gap-2.5">
+        <span className="label-caps text-muted-foreground">Scenario</span>
+        <Select
+          value={activeScenarioKey}
+          onValueChange={(key) => {
+            const scenario = scenarios.find((s) => s.key === key);
+            if (scenario) onScenario(scenario);
+          }}
+          disabled={scenarioDisabled}
+        >
+          <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
+            <SelectValue placeholder="Choose a scenario" />
+          </SelectTrigger>
+          <SelectContent>
+            {scenarios.map((scenario) => (
+              <SelectItem key={scenario.key} value={scenario.key}>
+                {scenario.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {activeScenario && (
+          <span className="hidden rounded-full border border-accent bg-accent/10 px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-foreground xl:inline">
+            {activeScenario.label}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <span className="label-caps text-muted-foreground">Labels</span>
+        <div className="flex overflow-hidden rounded-full border border-border bg-card">
+          {LABEL_MODES.map((mode) => (
+            <button
+              key={mode.value}
+              type="button"
+              aria-pressed={labelMode === mode.value}
+              onClick={() => onLabelModeChange(mode.value)}
+              className={`px-2.5 py-1 text-[11px] transition-colors ${
+                labelMode === mode.value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
 
       {activeCustomer && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -368,11 +486,14 @@ function EmptyState({
   scenarios,
   onRun,
   disabled,
+  labelMode,
 }: {
   scenarios: Scenario[];
   onRun: (scenario: Scenario) => void;
   disabled: boolean;
+  labelMode: LabelMode;
 }) {
+  const member = scenarios[0];
   return (
     <div className="py-8">
       <h1 className="font-serif text-3xl leading-tight text-foreground">
@@ -386,10 +507,12 @@ function EmptyState({
       </p>
 
       <div className="mt-8">
-        <div className="label-caps mb-3 text-muted-foreground">Demo members</div>
+        <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
         <p className="mb-3 text-[12px] text-muted-foreground">
-          Each member holds different synthetic policy data, so each one demonstrates a different
-          outcome. Picking one switches the selector to that member and runs their question.
+          All scenarios run as the same member
+          {member ? ` — ${formatMember(labelMode, member.customerId, member.memberName)}` : ""}. Her
+          three policies produce a different outcome depending on what she asks about. Picking one
+          starts a fresh conversation and sends that question.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
@@ -402,16 +525,25 @@ function EmptyState({
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="text-[13px] font-semibold text-foreground">
-                  <span className="font-mono font-normal text-muted-foreground">
-                    {scenario.customerId}
-                  </span>
-                  {scenario.memberName ? ` · ${scenario.memberName}` : ""}
+                  {labelMode === "name" ? (
+                    scenario.memberName
+                  ) : (
+                    <>
+                      <span className="font-mono font-normal text-muted-foreground">
+                        {scenario.customerId}
+                      </span>
+                      {labelMode === "both" && scenario.memberName
+                        ? ` · ${scenario.memberName}`
+                        : ""}
+                    </>
+                  )}
                 </span>
                 <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
                   {scenario.label}
                 </span>
               </div>
               <div className="mt-1 text-[12px] text-muted-foreground">{scenario.hint}</div>
+
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
                 "{scenario.prompt}"
               </div>
@@ -547,7 +679,8 @@ function Composer({
   isLoading,
   scenarios,
   onScenario,
-  activeCustomerId,
+  activeScenarioKey,
+  labelMode,
 }: {
   ref: React.Ref<HTMLTextAreaElement>;
   value: string;
@@ -556,26 +689,23 @@ function Composer({
   isLoading: boolean;
   scenarios: Scenario[];
   onScenario: (scenario: Scenario) => void;
-  activeCustomerId: string;
+  activeScenarioKey: string;
+  labelMode: LabelMode;
 }) {
   return (
     <div className="border-t border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="mx-auto max-w-3xl">
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="label-caps mr-1 text-muted-foreground">Switch member scenario</span>
+          <span className="label-caps mr-1 text-muted-foreground">Switch scenario</span>
           {scenarios.map((scenario) => {
-            const isActive = scenario.customerId === activeCustomerId;
+            const isActive = scenario.key === activeScenarioKey;
             return (
               <button
                 key={scenario.key}
                 type="button"
                 disabled={isLoading}
                 aria-current={isActive ? "true" : undefined}
-                title={
-                  scenario.memberName
-                    ? `Runs as ${scenario.memberName} — ${scenario.hint}`
-                    : scenario.hint
-                }
+                title={`${formatMember(labelMode, scenario.customerId, scenario.memberName)} — ${scenario.hint}`}
                 onClick={() => onScenario(scenario)}
                 className={`rounded-full border px-2.5 py-1 text-[11.5px] transition-colors disabled:opacity-50 ${
                   isActive
@@ -583,10 +713,19 @@ function Composer({
                     : "border-border bg-card text-muted-foreground hover:border-accent hover:text-foreground"
                 }`}
               >
-                <span className="font-mono">{scenario.customerId}</span>
-                {scenario.memberName ? ` · ${scenario.memberName}` : ""}
+                {labelMode === "name" ? (
+                  scenario.memberName
+                ) : (
+                  <>
+                    <span className="font-mono">{scenario.customerId}</span>
+                    {labelMode === "both" && scenario.memberName
+                      ? ` · ${scenario.memberName}`
+                      : ""}
+                  </>
+                )}
                 <span className="hidden sm:inline"> — {scenario.label.toLowerCase()}</span>
               </button>
+
             );
           })}
 
