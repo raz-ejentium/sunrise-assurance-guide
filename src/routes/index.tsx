@@ -446,7 +446,18 @@ function ToolChip({ name, state }: { name: string; state: string }) {
   );
 }
 
+// Model output occasionally carries stray scaffolding artifacts (e.g. a lone
+// "Box1" line) that are not meant for the customer. Strip them before render.
+function cleanAssistantText(text: string) {
+  return text
+    .split("\n")
+    .filter((line) => !/^\s*\**\[?\s*(box|block|section|card|panel)\s*\d+\s*\]?\**\s*:?\s*$/i.test(line))
+    .join("\n")
+    .trim();
+}
+
 function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: () => void }) {
+
   if (message.role === "user") {
     const text = message.parts
       .map((part) => (part.type === "text" ? part.text : ""))
