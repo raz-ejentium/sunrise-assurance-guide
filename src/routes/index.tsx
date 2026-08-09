@@ -414,7 +414,7 @@ function SessionBar({
         </div>
       )}
 
-      </div>
+
 
       <div className="flex items-center gap-1.5">
         <span className="label-caps text-muted-foreground">Labels</span>
