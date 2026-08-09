@@ -292,11 +292,17 @@ function SessionBar({
   customerId,
   onCustomerChange,
   activeCustomer,
+  onReset,
+  canReset,
+  resetDisabled,
 }: {
   customers: DemoCustomer[];
   customerId: string;
   onCustomerChange: (id: string) => void;
   activeCustomer: DemoCustomer | undefined;
+  onReset: () => void;
+  canReset: boolean;
+  resetDisabled: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
