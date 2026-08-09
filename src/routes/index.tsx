@@ -446,7 +446,18 @@ function ToolChip({ name, state }: { name: string; state: string }) {
   );
 }
 
+// Model output occasionally carries stray scaffolding artifacts (e.g. a lone
+// "Box1" line) that are not meant for the customer. Strip them before render.
+function cleanAssistantText(text: string) {
+  return text
+    .split("\n")
+    .filter((line) => !/^\s*\**\[?\s*(box|block|section|card|panel)\s*\d+\s*\]?\**\s*:?\s*$/i.test(line))
+    .join("\n")
+    .trim();
+}
+
 function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: () => void }) {
+
   if (message.role === "user") {
     const text = message.parts
       .map((part) => (part.type === "text" ? part.text : ""))
@@ -468,7 +479,7 @@ function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: 
 
   message.parts.forEach((part, index) => {
     if (part.type === "text") {
-      if (part.text.trim()) blocks.push({ key: `t-${index}`, text: part.text });
+      if (cleanAssistantText(part.text)) blocks.push({ key: `t-${index}`, text: part.text });
       return;
     }
     if (!isToolPart(part)) return;
@@ -500,6 +511,12 @@ function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: 
         </div>
       )}
 
+      {blocks.map((block) => (
+        <div key={block.key} className="prose-claims max-w-none text-[14.5px] text-foreground">
+          <ReactMarkdown>{cleanAssistantText(block.text)}</ReactMarkdown>
+        </div>
+      ))}
+
       {escalations.map((escalation) => (
         <EscalationCard
           key={escalation.reference_number}
@@ -508,11 +525,6 @@ function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: 
         />
       ))}
 
-      {blocks.map((block) => (
-        <div key={block.key} className="prose-claims max-w-none text-[14.5px] text-foreground">
-          <ReactMarkdown>{block.text}</ReactMarkdown>
-        </div>
-      ))}
     </div>
   );
 }

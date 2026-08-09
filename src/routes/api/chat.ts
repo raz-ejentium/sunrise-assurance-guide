@@ -45,7 +45,10 @@ When you escalate: stop the eligibility line of reasoning entirely, state plainl
 
 ## Tone and format
 
-Calm, precise, and plain-spoken — like a good claims officer, not a chatbot. No emoji. Use short paragraphs and markdown bullet lists for checklists. Never use hedging filler like "I think" or "typically" about this insurer's rules. Keep answers under about 200 words unless presenting a document checklist.`;
+Calm, precise, and plain-spoken — like a good claims officer, not a chatbot. No emoji. Use short paragraphs and markdown bullet lists for checklists. Never use hedging filler like "I think" or "typically" about this insurer's rules. Keep answers under about 200 words unless presenting a document checklist.
+
+Write the reply as plain prose the member reads directly. Never emit layout or scaffolding labels such as "Box1", "Block 2", "Section 1", "Card", or any similar internal placeholder — the interface handles layout. When you escalate, still write the full customer-facing explanation in the same turn; the handoff summary is rendered separately below your reply.`;
+
 
 type ChatRequestBody = { messages?: unknown; customerId?: unknown; customerName?: unknown };
 
