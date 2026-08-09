@@ -45,7 +45,7 @@ The surface reading — "customers don't read their policies carefully enough" �
 2. **Capture the claim event** — agent asks what happened (condition/treatment, when, which provider) in plain language, no policy jargon required from Linda.
 3. **Run eligibility check** — agent calls an eligibility tool against both policies for the stated treatment, checking coverage, waiting periods, and any exclusions.
 4. **Determine claim sequence** — if both policies could apply, the agent determines coordination-of-benefits order (which policy claims first) rather than leaving Linda to guess.
-5. **Return document, timing, and submission guidance** — agent states exactly what documents are needed to prepare (guidance, not documents pulled from a customer record), whether pre-authorization is required before treatment or a post-treatment claim is acceptable, and where and how to submit — the channel, method, and an estimated turnaround time. This directly addresses the highest-friction point in Sun Life's own data ("where/when to raise," scored 88), plus the separate "how long will it take" concern.
+5. **Return document, timing, and submission guidance** — agent returns three things together: what documents to prepare (guidance on what to gather, not documents pulled from a customer record), whether pre-authorization is required before treatment or a post-treatment claim is acceptable, and where/how to submit with an estimated turnaround. This directly addresses the highest-friction point in Sun Life's own data ("where/when to raise," scored 88), plus the separate "how long will it take" concern.
 6. **Ambiguity check** — if any step above can't be resolved with confidence, the agent stops and escalates (see 3.3) instead of producing steps 4-5 anyway.
 
 ### 3.2 Tools / function calls
@@ -85,7 +85,7 @@ The surface reading — "customers don't read their policies carefully enough" �
 4. *Today: timing confusion leads to wrong or premature submissions.* → **Future: timing is stated upfront before the client acts, not discovered after a wrong submission.**
 5. *Today: incomplete documents trigger rework, resubmission, and abandonment.* → **Future: genuinely ambiguous cases are caught and escalated to a human *before* a bad submission happens, not after — rework shifts from "fix a failed claim" to "one specialist review, with full context already attached."**
 
-This is the working model in narrative form; the categorized detail below (task split, role change, human-in-the-loop, enablement) is the same model broken into Sun Life's four requested dimensions.
+The categorized detail below — task split, role change, human-in-the-loop, and enablement — breaks this same working model into Sun Life's four requested dimensions.
 
 **Future state — what changes:**
 
@@ -109,7 +109,7 @@ This is the working model in narrative form; the categorized detail below (task 
 
 **Auditability.** Each tool call (eligibility check, document lookup, timing rule, escalation) is logged with its inputs and outputs, so any customer-facing statement the agent makes can be traced back to the specific data it queried — relevant both for internal QA and for responding to a regulator or complaint inquiry about a specific case.
 
-**Code quality / repo hygiene.** No secret or service-role credentials are committed to the repository. The Lovable-managed `.env` file (auto-synced by the platform's GitHub integration) contains only a Supabase publishable key, project ID, and project URL — credentials designed for client-side exposure and already present in the deployed app's public bundle regardless of `.env` visibility. No real customer data is committed; the synthetic dataset is clearly labeled as such in the README; repo structure separates data model, tool functions, and conversation logic so a reviewer can trace the architecture without reading through UI code.
+**Code quality / repo hygiene.** No secret or service-role credentials are committed to the repository. The Lovable-managed `.env` file (auto-synced by the platform's GitHub integration) contains only a Supabase publishable key, project ID, and project URL. These are credentials designed for client-side exposure and are already present in the deployed app's public bundle regardless of `.env` visibility. No real customer data is committed, and the synthetic dataset is clearly labeled as such in the README. Repo structure separates data model, tool functions, and conversation logic so a reviewer can trace the architecture without reading through UI code.
 
 ---
 
@@ -117,15 +117,36 @@ This is the working model in narrative form; the categorized detail below (task 
 
 **What this prototype's live test actually demonstrated (not projected — observed):** running the coverage-boundary scenario against Linda Chen's two policies produced a 5-step tool trace (`get_customer_policies` → `resolve_treatment` → `check_eligibility` ×2 → `escalate_to_human`), a clause-level explanation (exclusion 8.3(b) on POL-1001; indeterminate rider status on POL-1002), and a reference number (ESC-2026-1045) — end to end, in seconds, with zero guessed answers. That single run is the proof point for the metrics below; production metrics would track it at volume.
 
-**Metrics to track post-launch** (△ targets are illustrative estimates for this prototype, not committed figures):
+**Metrics by category** (△ targets are illustrative estimates for this prototype, not committed figures — no production baseline exists yet):
 
-| Metric | Baseline (today) | Target direction | Notes |
-|---|---|---|---|
-| Time to claim initiation | Multi-call, multi-day in ambiguous cases | △ Single session, most cases | Directly addresses Root Cause 2/3 |
-| % resolved without human touch | △ Low — every case currently routes through a contact centre agent | △ Majority of straightforward cases self-served | Industry STP benchmarks for claims sit under 10% broadly, ~35% for top performers — a reasonable, non-overpromising target range for initiation-only scope ✓ |
-| Escalation quality (not just volume) | N/A — no structured escalation exists today | Escalations carry full context, zero re-interview of customer | Demonstrated live: escalation summary included full clause-level reasoning, no follow-up questions needed |
-| Repeat-escalation-reason rate | N/A | Declining, as common ambiguous patterns (e.g. `rider_status_unknown`) get fed back into agent scope | This is the operating-model feedback loop from Section 4, made visible in the Escalation inbox |
-| Regulatory complaint volume (BNMLINK-tracked) | 222 MHIT complaints in 2025 ✓ | △ Directional reduction, as upstream friction is resolved before it becomes a formal complaint | Framed as a leading indicator, not a committed target — complaint drivers are multi-causal |
+**Client experience**
+- Claim-initiation cycle time — △ from multi-call, multi-day (ambiguous cases) to single session, most cases
+- First-contact resolution — △ majority of straightforward cases resolved without a callback loop, versus today's near-zero rate for eligibility questions
+- Number of client follow-ups per claim — demonstrated live: the escalation handoff carried full clause-level context, requiring zero re-interview of the customer
+
+**Operational efficiency**
+- % straight-through initiation — ◐ industry STP benchmarks for claims sit under 10% broadly, ~35% for top performers — a reasonable, non-overpromising target range for initiation-only scope ✓
+- Manual handoffs removed — every case today requires a human lookup across systems; only genuinely ambiguous cases would require one in the future state
+- Claims handled per FTE / average handling time — △ not measurable from this prototype (no staffing or volume data exists); flagged as a metric to instrument from day one of a pilot, not estimated here
+
+**Quality & accuracy**
+- Reduction in incorrect eligibility guidance — the architecture's core design goal: the agent structurally cannot state coverage it hasn't confirmed via `check_eligibility`, and escalates rather than guesses (verified live twice, Section 3.3)
+- Rework / resubmission rate — △ expected to fall as document and timing guidance is given upfront (Section 3.1, step 5) rather than discovered after a wrong submission
+- Document-completeness on first submission — △ directly targeted by `get_document_requirements` providing the full checklist before the customer submits, rather than piecemeal across exchanges
+
+**Financial impact**
+- Cost per claim, cost savings, cost avoidance, and AI running cost are covered in full in Section 7 (Cost-Effectiveness) rather than duplicated here, per the same category split used in Sun Life's own brief.
+
+**Visualisation — before/after scorecard:**
+
+| | Today | Future state (this solution) |
+|---|---|---|
+| Client experience | Multiple calls, inconsistent answers, no visibility into progress | Single guided session; clear confirmed-vs-unresolved answer every time |
+| Operational efficiency | Every case — simple or complex — consumes full frontline time | Only genuinely ambiguous cases reach a human, with full context attached |
+| Quality & accuracy | Risk of inconsistent guidance across agents/calls | Guidance is structurally tied to policy data — no invented answers, by design |
+| Financial impact | Cost concentrated in repeat human contact (see Section 1) | Cost shifts to occasional high-value human judgment; per-interaction AI cost estimated in Section 7 |
+
+△ *This scorecard format is the visualization for this prototype submission; a production dashboard would plot the metrics above against real volume over time.*
 
 ## 7. Cost-Effectiveness
 
@@ -135,6 +156,22 @@ This is the working model in narrative form; the categorized detail below (task 
 - Assume a mid-tier LLM at roughly $0.003–$0.015 per 1K tokens depending on provider/model tier, and a moderate prompt+context size per call (~1-2K tokens each given policy/customer data injected per step)
 - 5 calls × ~1.5K tokens average ≈ 7.5K tokens per full interaction → rough per-interaction cost in the range of a few cents, not dollars
 - At meaningful volume (e.g. thousands of initiations/month), this is a small fraction of the cost of an equivalent contact-centre call, which involves agent time, hold time, and potential repeat contact
+
+**Design choices made to keep cost efficient:**
+- **Structured tool calls over one large context-stuffed prompt.** Each function call carries only the data relevant to that step — a single policy, a single treatment lookup — rather than dumping the customer's full policy documents and history into every reasoning turn. Smaller, cheaper calls that also happen to be more auditable (Section 5); not a trade-off between cost and governance, but a design that serves both.
+- **Right-sizing the model to the task.** This is a structured decision-and-lookup agent, not an open-ended reasoning task — a mid-tier model is sufficient and was chosen deliberately over a frontier-tier model that would cost more per call without improving the actual eligibility-lookup logic, which is rules-based (Section 3.2), not something that benefits from maximum model capability.
+- **Escalation as a cost control, not just a safety control.** Every ambiguous case stops the agent rather than letting it reason further to try to resolve the ambiguity — this caps the token spend on any single interaction rather than allowing runaway multi-turn reasoning on cases the agent was never going to resolve confidently anyway.
+- △ **Caching** — not implemented in this prototype (out of scope for an evening build), but flagged as the clear next efficiency step: policy and document-requirement lookups for the same customer/treatment combination are repeatable and cacheable, which would reduce redundant calls at volume.
+
+**Scale view:**
+
+| Volume (initiations/month) | △ Est. AI cost (at ~$0.01-0.05 per interaction) | For comparison |
+|---|---|---|
+| 1,000 | △ $10-50/month | A fraction of one contact-centre agent's monthly cost |
+| 10,000 | △ $100-500/month | Still well under the cost of adding contact-centre headcount to absorb the same volume |
+| 100,000 | △ $1,000-5,000/month | At this scale, caching (above) and negotiated provider pricing would meaningfully reduce the actual figure — this range assumes neither |
+
+△ *These figures scale linearly from the per-interaction estimate above and carry the same caveat: directional, not a committed number.*
 
 **Cost-effectiveness argument, stated honestly:** the case for this solution isn't that AI calls are free — it's that today's cost is concentrated in *repeat human contact* (Root Cause 2/3: the customer calls, gets a partial answer, calls again). Collapsing that into one agent-assisted session, with clean escalation only for genuinely ambiguous cases, shifts cost from repeated low-value human lookup time to occasional high-value human judgment time — which is both cheaper and a better use of claims staff.
 
@@ -146,7 +183,7 @@ This is the working model in narrative form; the categorized detail below (task 
 
 Kept as evidence of process, not just output — the brief notes judgment is being assessed, not lines of code written.
 
-- **Platform selection:** the same build spec (Section 3) was tested across four AI build platforms (Lovable, Replit, Base44, Google AI Studio) to see how consistently the same requirements translated across tools. Lovable was selected as the primary submission: it produced the most literal fulfillment of the "no invented coverage answer" requirement via a visible Agent Tool Trace panel showing each function call and its output, plus dedicated Escalation Inbox and Decision Log pages matching the spec directly. Replit produced a noticeably more polished, warmer customer-facing UI (per-policy confidence cards, softer copy, a clean liability disclaimer) — several of these elements were ported back into the Lovable build rather than switching platforms this late, on the reasoning that demonstrated agentic transparency outweighs additional UI polish for this specific rubric.
+- **Platform selection:** the same build spec (Section 3) was tested across four AI build platforms — Lovable, Replit, Base44, and Google AI Studio — to see how consistently the same requirements translated across tools. Lovable was selected as the primary submission: it produced the most literal fulfillment of the "no invented coverage answer" requirement, via a visible Agent Tool Trace panel showing each function call and its output, plus dedicated Escalation Inbox and Decision Log pages matching the spec directly. Replit produced a noticeably more polished, warmer customer-facing UI — per-policy confidence cards, softer copy, a clean liability disclaimer. Several of these elements were ported back into the Lovable build rather than switching platforms this late, on the reasoning that demonstrated agentic transparency outweighs additional UI polish for this specific rubric.
 - **Scope discipline under time constraint:** build time was limited to evenings only across four days. This forced explicit scope cuts: a single well-tested escalation scenario over multiple partially-tested ones, a synthetic dataset over any live system integration, and a lean cost-effectiveness estimate (labelled as an assumption) over a fabricated precise ROI figure.
 - **Live verification, not assumed behavior:** the escalation path was tested twice against Linda Chen's coverage-boundary scenario (references ESC-2026-1044, ESC-2026-1045), confirming the agent correctly distinguished a confirmed exclusion (POL-1001, clause 8.3(b)) from a genuinely indeterminate condition (POL-1002 rider status) rather than defaulting to a single blanket "escalate" response — this was checked directly rather than assumed to work from the architecture alone.
 - **Fact-checking discipline:** early drafts of the Problem Statement cited industry statistics that could not be re-verified to a primary source on a second pass (an initial "85% intend to switch" / "71% UK P&C churn" claim). These were corrected to figures independently re-confirmed via direct source checks (Accenture, BNM/Bernama) before this version, with unconfirmed figures either removed or explicitly labelled as directional/assumption rather than presented as fact.
