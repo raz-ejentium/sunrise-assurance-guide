@@ -57,7 +57,9 @@ type Scenario = {
   hint: string;
   customerId: string;
   prompt: string;
+  memberName?: string;
 };
+
 
 const SCENARIOS: Scenario[] = [
   {
@@ -184,14 +186,34 @@ function ClaimsAssistant() {
     [isLoading, sendMessage],
   );
 
+  const [pending, setPending] = useState<{ customerId: string; prompt: string } | null>(null);
+
   const runScenario = useCallback(
     (scenario: Scenario) => {
+      if (isLoading) return;
+      setInput("");
       setCustomerId(scenario.customerId);
       setMessages([]);
-      setInput(scenario.prompt);
-      requestAnimationFrame(() => inputRef.current?.focus());
+      setPending({ customerId: scenario.customerId, prompt: scenario.prompt });
     },
-    [setMessages],
+    [isLoading, setMessages],
+  );
+
+  // Send only once the chat session has been rebuilt for the scenario's member,
+  // otherwise the member switch tears down the instance and drops the message.
+  useEffect(() => {
+    if (!pending || pending.customerId !== customerId) return;
+    setPending(null);
+    void sendMessage({ text: pending.prompt });
+  }, [pending, customerId, sendMessage]);
+
+  const scenarios: Scenario[] = useMemo(
+    () =>
+      SCENARIOS.map((scenario) => {
+        const memberName = customers.find((c) => c.id === scenario.customerId)?.name;
+        return memberName ? { ...scenario, memberName } : scenario;
+      }),
+    [customers],
   );
 
   return (
@@ -210,7 +232,7 @@ function ClaimsAssistant() {
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
           <div className="mx-auto max-w-3xl">
             {messages.length === 0 ? (
-              <EmptyState scenarios={SCENARIOS} onRun={runScenario} />
+              <EmptyState scenarios={scenarios} onRun={runScenario} disabled={isLoading} />
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
@@ -228,10 +250,11 @@ function ClaimsAssistant() {
           onChange={setInput}
           onSubmit={() => submit(input)}
           isLoading={isLoading}
-          scenarios={SCENARIOS}
+          scenarios={scenarios}
           onScenario={runScenario}
         />
       </section>
+
 
       <div className="hidden min-h-0 lg:block">
         <TracePanel entries={trace} />
@@ -298,9 +321,11 @@ function SessionBar({
 function EmptyState({
   scenarios,
   onRun,
+  disabled,
 }: {
   scenarios: Scenario[];
   onRun: (scenario: Scenario) => void;
+  disabled: boolean;
 }) {
   return (
     <div className="py-8">
@@ -316,21 +341,31 @@ function EmptyState({
 
       <div className="mt-8">
         <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
+        <p className="mb-3 text-[12px] text-muted-foreground">
+          Each scenario runs as the member it was written for, and switches the selector to them.
+        </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
             <button
               key={scenario.key}
               type="button"
+              disabled={disabled}
               onClick={() => onRun(scenario)}
-              className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80"
+              className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80 disabled:opacity-50"
             >
-              <div className="text-[13px] font-semibold text-foreground">{scenario.label}</div>
+              <div className="text-[13px] font-semibold text-foreground">
+                {scenario.label}
+                {scenario.memberName ? (
+                  <span className="font-normal text-muted-foreground"> — {scenario.memberName}</span>
+                ) : null}
+              </div>
               <div className="mt-0.5 text-[12px] text-muted-foreground">{scenario.hint}</div>
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
                 "{scenario.prompt}"
               </div>
             </button>
           ))}
+
         </div>
       </div>
     </div>
@@ -460,12 +495,18 @@ function Composer({
             <button
               key={scenario.key}
               type="button"
+              disabled={isLoading}
+              title={
+                scenario.memberName ? `Runs as ${scenario.memberName}` : "Runs as its demo member"
+              }
               onClick={() => onScenario(scenario)}
-              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
             >
               {scenario.label}
+              {scenario.memberName ? ` — ${scenario.memberName}` : ""}
             </button>
           ))}
+
         </div>
 
         <form
