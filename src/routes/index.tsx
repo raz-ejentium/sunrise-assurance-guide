@@ -401,6 +401,10 @@ function ClaimsAssistant() {
           onChange={setInput}
           onSubmit={() => submit(input)}
           isLoading={isLoading}
+          canReset={messages.length > 0}
+          onReset={resetConversation}
+          resetDisabled={isLoading}
+
         />
       </section>
 
@@ -553,22 +557,12 @@ function SessionBar({
 
 
       <div className="ml-auto flex items-center gap-3">
-        {canReset && (
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={resetDisabled}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
-          >
-            <RotateCcw className="size-3.5" aria-hidden />
-            New conversation
-          </button>
-        )}
         <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
           <ShieldCheck className="size-3.5" aria-hidden />
           Synthetic data · no adjudication
         </div>
       </div>
+
     </div>
   );
 }
@@ -759,21 +753,38 @@ function Composer({
   onChange,
   onSubmit,
   isLoading,
+  canReset,
+  onReset,
+  resetDisabled,
 }: {
   ref: React.Ref<HTMLTextAreaElement>;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
+  canReset: boolean;
+  onReset: () => void;
+  resetDisabled: boolean;
 }) {
   return (
     <div className="border-t border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="mx-auto max-w-3xl">
-
-
-
+        {canReset && (
+          <div className="mb-2 flex justify-end">
+            <button
+              type="button"
+              onClick={onReset}
+              disabled={resetDisabled}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
+            >
+              <RotateCcw className="size-3.5" aria-hidden />
+              New conversation
+            </button>
+          </div>
+        )}
 
         <form
+
           onSubmit={(event) => {
             event.preventDefault();
             onSubmit();
