@@ -598,13 +598,16 @@ function EmptyState({
       </p>
 
       <div className="mt-8">
-        <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
+        <div className="label-caps mb-3 text-muted-foreground">
+          Demo scenarios
+          {member ? ` · ${formatMember(labelMode, member.customerId, member.memberName)}` : ""}
+        </div>
         <p className="mb-3 text-[12px] text-muted-foreground">
-          All scenarios run as the same member
-          {member ? ` — ${formatMember(labelMode, member.customerId, member.memberName)}` : ""}. Her
-          three policies produce a different outcome depending on what she asks about. Picking one
+          {scenarios.length} scenario{scenarios.length === 1 ? "" : "s"} drawn from this member's
+          own policy record. Switch member in the top bar to see a different set. Picking one
           starts a fresh conversation and sends that question.
         </p>
+
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
             <button
