@@ -450,92 +450,96 @@ function SessionBar({
 }) {
 
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
-      <div className="flex items-center gap-2.5">
-        <span className="label-caps text-muted-foreground">Member</span>
-        <Select value={customerId} onValueChange={onCustomerChange}>
-          <SelectTrigger className="h-8 w-[210px] bg-card text-[13px]">
-            <SelectValue placeholder="Select a member" />
-          </SelectTrigger>
-          <SelectContent>
-            {customers.map((customer) => (
-              <SelectItem key={customer.id} value={customer.id}>
-                {labelMode === "name" ? (
-                  customer.name
-                ) : (
-                  <>
-                    <span className="font-mono">{customer.id}</span>
-                    {labelMode === "both" && ` · ${customer.name}`}
-                  </>
-                )}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {showScenarioPicker && (
-        <div className="flex items-center gap-2.5">
-          <span className="label-caps text-muted-foreground">Scenario</span>
-          <Select
-            value={activeScenarioKey}
-            onValueChange={(key) => {
-              const scenario = scenarios.find((s) => s.key === key);
-              if (scenario) onScenario(scenario);
-            }}
-            disabled={scenarioDisabled}
-          >
-            <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
-              <SelectValue placeholder="Choose a scenario" />
+    <div className="flex flex-col border-b border-border bg-parchment">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 sm:px-8">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="label-caps shrink-0 text-muted-foreground">Member</span>
+          <Select value={customerId} onValueChange={onCustomerChange}>
+            <SelectTrigger className="h-8 w-[210px] bg-card text-[13px]">
+              <SelectValue placeholder="Select a member" />
             </SelectTrigger>
             <SelectContent>
-              {scenarios.map((scenario) => (
-                <SelectItem key={scenario.key} value={scenario.key}>
-                  {scenario.label}
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  {labelMode === "name" ? (
+                    customer.name
+                  ) : (
+                    <>
+                      <span className="font-mono">{customer.id}</span>
+                      {labelMode === "both" && ` · ${customer.name}`}
+                    </>
+                  )}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-      )}
 
-
-
-      <div className="flex items-center gap-1.5">
-        <span className="label-caps text-muted-foreground">Labels</span>
-        <div className="flex overflow-hidden rounded-full border border-border bg-card">
-          {LABEL_MODES.map((mode) => (
-            <button
-              key={mode.value}
-              type="button"
-              aria-pressed={labelMode === mode.value}
-              onClick={() => onLabelModeChange(mode.value)}
-              className={`px-2.5 py-1 text-[11px] transition-colors ${
-                labelMode === mode.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+        {showScenarioPicker && (
+          <div className="flex items-center gap-2.5">
+            <span className="label-caps shrink-0 text-muted-foreground">Scenario</span>
+            <Select
+              value={activeScenarioKey}
+              onValueChange={(key) => {
+                const scenario = scenarios.find((s) => s.key === key);
+                if (scenario) onScenario(scenario);
+              }}
+              disabled={scenarioDisabled}
             >
-              {mode.label}
-            </button>
-          ))}
+              <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
+                <SelectValue placeholder="Choose a scenario" />
+              </SelectTrigger>
+              <SelectContent>
+                {scenarios.map((scenario) => (
+                  <SelectItem key={scenario.key} value={scenario.key}>
+                    {scenario.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5">
+          <span className="label-caps shrink-0 text-muted-foreground">Labels</span>
+          <div className="flex overflow-hidden rounded-full border border-border bg-card">
+            {LABEL_MODES.map((mode) => (
+              <button
+                key={mode.value}
+                type="button"
+                aria-pressed={labelMode === mode.value}
+                onClick={() => onLabelModeChange(mode.value)}
+                className={`px-2.5 py-1 text-[11px] transition-colors ${
+                  labelMode === mode.value
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="ml-auto hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
+          <ShieldCheck className="size-3.5" aria-hidden />
+          Synthetic data · no adjudication
         </div>
       </div>
 
-
       {activeCustomer && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/70 border-l-2 border-l-accent bg-muted/40 py-1 pl-2.5 pr-3">
-          <span className="label-caps text-muted-foreground">
+        <div className="flex min-h-[38px] items-center gap-3 border-t border-border/60 px-4 py-2 sm:px-8">
+          <span className="label-caps flex shrink-0 items-center gap-1.5 border-l-2 border-l-accent pl-2 text-muted-foreground">
             Policies
-            <span className="ml-1 font-mono text-[10px] text-accent">
+            <span className="font-mono text-[10px] text-accent">
               {activeCustomer.policies.length}
             </span>
           </span>
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
             {activeCustomer.policies.map((policy) => (
               <span
                 key={policy.id}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] ${
                   policy.status === "active"
                     ? "border-border bg-card text-foreground"
                     : "border-destructive/40 bg-destructive/10 text-destructive"
@@ -543,29 +547,24 @@ function SessionBar({
               >
                 <span
                   aria-hidden
-                  className={`size-1.5 rounded-full ${
+                  className={`size-1.5 shrink-0 rounded-full ${
                     policy.status === "active" ? "bg-accent" : "bg-destructive"
                   }`}
                 />
-                <span className="font-mono">{policy.id}</span> · {policy.policy_type}
-                {policy.status !== "active" && ` · ${policy.status}`}
+                <span className="font-mono">{policy.id}</span>
+                <span>{policy.policy_type}</span>
+                {policy.status !== "active" && (
+                  <span className="uppercase tracking-wide">· {policy.status}</span>
+                )}
               </span>
             ))}
           </div>
         </div>
       )}
-
-
-      <div className="ml-auto flex items-center gap-3">
-        <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
-          <ShieldCheck className="size-3.5" aria-hidden />
-          Synthetic data · no adjudication
-        </div>
-      </div>
-
     </div>
   );
 }
+
 
 function EmptyState({
   scenarios,
