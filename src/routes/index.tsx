@@ -348,6 +348,7 @@ function SessionBar({
   activeScenarioKey,
   onScenario,
   scenarioDisabled,
+  showScenarioPicker,
 }: {
   customers: DemoCustomer[];
   customerId: string;
@@ -362,8 +363,9 @@ function SessionBar({
   activeScenarioKey: string;
   onScenario: (scenario: Scenario) => void;
   scenarioDisabled: boolean;
+  showScenarioPicker: boolean;
 }) {
-  const activeScenario = scenarios.find((s) => s.key === activeScenarioKey);
+
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="flex items-center gap-2.5">
