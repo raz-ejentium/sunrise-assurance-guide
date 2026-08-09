@@ -20,7 +20,8 @@ No login required. Use the scenario buttons on the Claims assistant page, or sel
 
 | File | What it is |
 |---|---|
-| `Sun_Life_Smart_Claims_BRD_PRD.md` | Full Business/Product Requirements Document — problem framing, root cause analysis, agent architecture, operating model, governance, business metrics, cost-effectiveness, and a decision log covering how and why this was built the way it was |
+| `Sun_Life_Smart_Claims_BRD_PRD_v2.docx` | The primary submission document — formatted Word version of the BRD/PRD below |
+| `Sun_Life_Smart_Claims_BRD_PRD_v2.md` | Source/working version of the same document — problem framing, root cause analysis, agent architecture, operating model, governance, business metrics, cost-effectiveness, and a decision log covering how and why this was built the way it was |
 | `Lovable_Build_Prompt.md` | The structured prompt used to drive the actual build — included as evidence of process, not just output |
 
 ## Scope
