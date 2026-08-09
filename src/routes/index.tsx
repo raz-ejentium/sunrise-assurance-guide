@@ -277,6 +277,8 @@ function ClaimsAssistant() {
           isLoading={isLoading}
           scenarios={scenarios}
           onScenario={runScenario}
+          activeCustomerId={customerId}
+
         />
       </section>
 
