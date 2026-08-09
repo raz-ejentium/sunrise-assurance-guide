@@ -57,7 +57,9 @@ type Scenario = {
   hint: string;
   customerId: string;
   prompt: string;
+  memberName?: string;
 };
+
 
 const SCENARIOS: Scenario[] = [
   {
