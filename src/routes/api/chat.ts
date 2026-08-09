@@ -165,7 +165,7 @@ export const Route = createFileRoute("/api/chat")({
         const gateway = createLovableAiGatewayProvider(key, initialRunId);
 
         const result = streamText({
-          model: gateway("google/gemini-3.6-flash"),
+          model: gateway("google/gemini-2.5-flash"),
           system:
             SYSTEM_PROMPT +
             (customerId
