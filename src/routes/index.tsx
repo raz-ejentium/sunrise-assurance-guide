@@ -184,15 +184,27 @@ function ClaimsAssistant() {
     [isLoading, sendMessage],
   );
 
+  const [pending, setPending] = useState<{ customerId: string; prompt: string } | null>(null);
+
   const runScenario = useCallback(
     (scenario: Scenario) => {
+      if (isLoading) return;
+      setInput("");
       setCustomerId(scenario.customerId);
       setMessages([]);
-      setInput(scenario.prompt);
-      requestAnimationFrame(() => inputRef.current?.focus());
+      setPending({ customerId: scenario.customerId, prompt: scenario.prompt });
     },
-    [setMessages],
+    [isLoading, setMessages],
   );
+
+  // Send only once the chat session has been rebuilt for the scenario's member,
+  // otherwise the member switch tears down the instance and drops the message.
+  useEffect(() => {
+    if (!pending || pending.customerId !== customerId) return;
+    setPending(null);
+    void sendMessage({ text: pending.prompt });
+  }, [pending, customerId, sendMessage]);
+
 
   return (
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
