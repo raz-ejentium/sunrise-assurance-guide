@@ -480,11 +480,14 @@ function EmptyState({
   scenarios,
   onRun,
   disabled,
+  labelMode,
 }: {
   scenarios: Scenario[];
   onRun: (scenario: Scenario) => void;
   disabled: boolean;
+  labelMode: LabelMode;
 }) {
+  const member = scenarios[0];
   return (
     <div className="py-8">
       <h1 className="font-serif text-3xl leading-tight text-foreground">
@@ -498,10 +501,12 @@ function EmptyState({
       </p>
 
       <div className="mt-8">
-        <div className="label-caps mb-3 text-muted-foreground">Demo members</div>
+        <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
         <p className="mb-3 text-[12px] text-muted-foreground">
-          Each member holds different synthetic policy data, so each one demonstrates a different
-          outcome. Picking one switches the selector to that member and runs their question.
+          All scenarios run as the same member
+          {member ? ` — ${formatMember(labelMode, member.customerId, member.memberName)}` : ""}. Her
+          three policies produce a different outcome depending on what she asks about. Picking one
+          starts a fresh conversation and sends that question.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
@@ -514,16 +519,25 @@ function EmptyState({
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="text-[13px] font-semibold text-foreground">
-                  <span className="font-mono font-normal text-muted-foreground">
-                    {scenario.customerId}
-                  </span>
-                  {scenario.memberName ? ` · ${scenario.memberName}` : ""}
+                  {labelMode === "name" ? (
+                    scenario.memberName
+                  ) : (
+                    <>
+                      <span className="font-mono font-normal text-muted-foreground">
+                        {scenario.customerId}
+                      </span>
+                      {labelMode === "both" && scenario.memberName
+                        ? ` · ${scenario.memberName}`
+                        : ""}
+                    </>
+                  )}
                 </span>
                 <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
                   {scenario.label}
                 </span>
               </div>
               <div className="mt-1 text-[12px] text-muted-foreground">{scenario.hint}</div>
+
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
                 "{scenario.prompt}"
               </div>
