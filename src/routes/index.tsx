@@ -65,7 +65,7 @@ const SCENARIOS: Scenario[] = [
   {
     key: "happy",
     label: "Happy path",
-    hint: "Single policy, clean coverage",
+    hint: "One active policy — appendectomy is cleanly covered",
     customerId: "CUST-002",
     prompt:
       "I had an emergency appendectomy at Gleneagles last Tuesday. What do I need to do to claim?",
@@ -73,7 +73,7 @@ const SCENARIOS: Scenario[] = [
   {
     key: "boundary",
     label: "Coverage boundary",
-    hint: "Two policies conflict — must escalate",
+    hint: "Two policies that conflict on bariatric surgery — must escalate",
     customerId: "CUST-001",
     prompt:
       "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
@@ -81,18 +81,19 @@ const SCENARIOS: Scenario[] = [
   {
     key: "waiting",
     label: "Waiting period",
-    hint: "Policy too new for the procedure",
+    hint: "Policy too new for knee surgery",
     customerId: "CUST-003",
     prompt: "I need keyhole surgery on my knee next month. Can I claim for it?",
   },
   {
     key: "unknown",
     label: "Unknown treatment",
-    hint: "Not in the reference table",
+    hint: "Asks about a treatment absent from the reference table",
     customerId: "CUST-004",
     prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
   },
 ];
+
 
 function isToolPart(part: { type: string }): boolean {
   return part.type.startsWith("tool-");
@@ -276,6 +277,8 @@ function ClaimsAssistant() {
           isLoading={isLoading}
           scenarios={scenarios}
           onScenario={runScenario}
+          activeCustomerId={customerId}
+
         />
       </section>
 
@@ -383,9 +386,10 @@ function EmptyState({
       </p>
 
       <div className="mt-8">
-        <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
+        <div className="label-caps mb-3 text-muted-foreground">Demo members</div>
         <p className="mb-3 text-[12px] text-muted-foreground">
-          Each scenario runs as the member it was written for, and switches the selector to them.
+          Each member holds different synthetic policy data, so each one demonstrates a different
+          outcome. Picking one switches the selector to that member and runs their question.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
@@ -396,13 +400,15 @@ function EmptyState({
               onClick={() => onRun(scenario)}
               className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80 disabled:opacity-50"
             >
-              <div className="text-[13px] font-semibold text-foreground">
-                {scenario.label}
-                {scenario.memberName ? (
-                  <span className="font-normal text-muted-foreground"> — {scenario.memberName}</span>
-                ) : null}
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[13px] font-semibold text-foreground">
+                  {scenario.memberName ?? scenario.customerId}
+                </span>
+                <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
+                  {scenario.label}
+                </span>
               </div>
-              <div className="mt-0.5 text-[12px] text-muted-foreground">{scenario.hint}</div>
+              <div className="mt-1 text-[12px] text-muted-foreground">{scenario.hint}</div>
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
                 "{scenario.prompt}"
               </div>
@@ -411,6 +417,7 @@ function EmptyState({
 
         </div>
       </div>
+
     </div>
   );
 }
@@ -537,6 +544,7 @@ function Composer({
   isLoading,
   scenarios,
   onScenario,
+  activeCustomerId,
 }: {
   ref: React.Ref<HTMLTextAreaElement>;
   value: string;
@@ -545,29 +553,41 @@ function Composer({
   isLoading: boolean;
   scenarios: Scenario[];
   onScenario: (scenario: Scenario) => void;
+  activeCustomerId: string;
 }) {
   return (
     <div className="border-t border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="mx-auto max-w-3xl">
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="label-caps mr-1 text-muted-foreground">Scenarios</span>
-          {scenarios.map((scenario) => (
-            <button
-              key={scenario.key}
-              type="button"
-              disabled={isLoading}
-              title={
-                scenario.memberName ? `Runs as ${scenario.memberName}` : "Runs as its demo member"
-              }
-              onClick={() => onScenario(scenario)}
-              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
-            >
-              {scenario.label}
-              {scenario.memberName ? ` — ${scenario.memberName}` : ""}
-            </button>
-          ))}
+          <span className="label-caps mr-1 text-muted-foreground">Switch member scenario</span>
+          {scenarios.map((scenario) => {
+            const isActive = scenario.customerId === activeCustomerId;
+            return (
+              <button
+                key={scenario.key}
+                type="button"
+                disabled={isLoading}
+                aria-current={isActive ? "true" : undefined}
+                title={
+                  scenario.memberName
+                    ? `Runs as ${scenario.memberName} — ${scenario.hint}`
+                    : scenario.hint
+                }
+                onClick={() => onScenario(scenario)}
+                className={`rounded-full border px-2.5 py-1 text-[11.5px] transition-colors disabled:opacity-50 ${
+                  isActive
+                    ? "border-accent bg-accent/10 text-foreground"
+                    : "border-border bg-card text-muted-foreground hover:border-accent hover:text-foreground"
+                }`}
+              >
+                {scenario.memberName ?? scenario.customerId} · {scenario.label.toLowerCase()}
+              </button>
+            );
+          })}
 
         </div>
+
+
 
         <form
           onSubmit={(event) => {
