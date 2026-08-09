@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
-import { ArrowUp, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowUp, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { listCustomers, type DemoCustomer } from "@/lib/demo.functions";
@@ -219,6 +219,14 @@ function ClaimsAssistant() {
     void sendMessage({ text: prompt });
   }, [pending, customerId, sendMessage]);
 
+  const resetConversation = useCallback(() => {
+    setMessages([]);
+    setInput("");
+    setPending(null);
+    sentRunRef.current = null;
+    inputRef.current?.focus();
+  }, [setMessages]);
+
 
   const scenarios: Scenario[] = useMemo(
     () =>
@@ -240,6 +248,9 @@ function ClaimsAssistant() {
             setInput("");
           }}
           activeCustomer={activeCustomer}
+          onReset={resetConversation}
+          canReset={messages.length > 0}
+          resetDisabled={isLoading}
         />
 
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
@@ -249,7 +260,7 @@ function ClaimsAssistant() {
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
-                  <MessageBlock key={message.id} message={message} />
+                  <MessageBlock key={message.id} message={message} onRestart={resetConversation} />
                 ))}
                 {status === "submitted" && <Thinking />}
               </div>
@@ -281,11 +292,17 @@ function SessionBar({
   customerId,
   onCustomerChange,
   activeCustomer,
+  onReset,
+  canReset,
+  resetDisabled,
 }: {
   customers: DemoCustomer[];
   customerId: string;
   onCustomerChange: (id: string) => void;
   activeCustomer: DemoCustomer | undefined;
+  onReset: () => void;
+  canReset: boolean;
+  resetDisabled: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
@@ -323,9 +340,22 @@ function SessionBar({
         </div>
       )}
 
-      <div className="ml-auto hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
-        <ShieldCheck className="size-3.5" aria-hidden />
-        Synthetic data · no adjudication
+      <div className="ml-auto flex items-center gap-3">
+        {canReset && (
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={resetDisabled}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
+          >
+            <RotateCcw className="size-3.5" aria-hidden />
+            New conversation
+          </button>
+        )}
+        <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
+          <ShieldCheck className="size-3.5" aria-hidden />
+          Synthetic data · no adjudication
+        </div>
       </div>
     </div>
   );
@@ -416,7 +446,7 @@ function ToolChip({ name, state }: { name: string; state: string }) {
   );
 }
 
-function MessageBlock({ message }: { message: UIMessage }) {
+function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: () => void }) {
   if (message.role === "user") {
     const text = message.parts
       .map((part) => (part.type === "text" ? part.text : ""))
@@ -471,7 +501,11 @@ function MessageBlock({ message }: { message: UIMessage }) {
       )}
 
       {escalations.map((escalation) => (
-        <EscalationCard key={escalation.reference_number} data={escalation} />
+        <EscalationCard
+          key={escalation.reference_number}
+          data={escalation}
+          onRestart={onRestart}
+        />
       ))}
 
       {blocks.map((block) => (
