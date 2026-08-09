@@ -45,7 +45,7 @@ The surface reading — "customers don't read their policies carefully enough" �
 2. **Capture the claim event** — agent asks what happened (condition/treatment, when, which provider) in plain language, no policy jargon required from Linda.
 3. **Run eligibility check** — agent calls an eligibility tool against both policies for the stated treatment, checking coverage, waiting periods, and any exclusions.
 4. **Determine claim sequence** — if both policies could apply, the agent determines coordination-of-benefits order (which policy claims first) rather than leaving Linda to guess.
-5. **Return document + timing guidance** — agent states exactly what documents are needed and whether pre-authorization is required before treatment or a post-treatment claim is acceptable.
+5. **Return document, timing, and submission guidance** — agent states exactly what documents are needed to prepare (guidance, not documents pulled from a customer record), whether pre-authorization is required before treatment or a post-treatment claim is acceptable, and where and how to submit — the channel, method, and an estimated turnaround time. This directly addresses the highest-friction point in Sun Life's own data ("where/when to raise," scored 88), plus the separate "how long will it take" concern.
 6. **Ambiguity check** — if any step above can't be resolved with confidence, the agent stops and escalates (see 3.3) instead of producing steps 4-5 anyway.
 
 ### 3.2 Tools / function calls
@@ -54,8 +54,9 @@ The surface reading — "customers don't read their policies carefully enough" �
 |---|---|---|---|
 | `get_customer_policies` | Retrieve all policies for a customer | customer_id | list of policy IDs, types, status |
 | `check_eligibility` | Determine coverage for a treatment under a policy | policy_id, treatment/condition code | covered (y/n), waiting-period status, applicable exclusions |
-| `get_document_requirements` | Return required documents for a claim type | policy_id, claim_type | document checklist |
+| `get_document_requirements` | Return required documents for a claim type | policy_id, claim_type | document checklist (guidance on what to prepare — not retrieved from customer records) |
 | `get_claim_timing_rule` | Determine pre-auth vs post-treatment claim rule | policy_id, treatment_code | timing requirement |
+| `get_submission_guidance` | Determine where/how to submit and expected turnaround | policy_id, claim_type | channel, method, estimated turnaround time |
 | `escalate_to_human` | Hand off with full context when confidence is low | reason, conversation summary | ticket/reference number for the customer |
 
 △ *Assumption: these are simulated against a synthetic dataset (mock policies, treatment codes, document rules) built for this challenge — not a live core-system integration, which would be a phase-2 production concern.*
@@ -76,12 +77,23 @@ The surface reading — "customers don't read their policies carefully enough" �
 
 **Today:** contact centre agents field eligibility and document questions manually — cross-referencing policy admin, claims, and CRM systems live on the call, often placing the customer on hold or promising a callback. There's no structured escalation path beyond "let me check and call you back"; every case, simple or complex, consumes the same amount of frontline time.
 
+**The future-state journey, mirrored against Sun Life's own current-state steps (Section: challenge context):**
+
+1. *Today: client unsure of coverage, calls customer care or advisor.* → **Future: client opens the assistant (or is prompted proactively at a claim-triggering event) — no call needed for the majority of cases.**
+2. *Today: staff manually check policy/policies across systems.* → **Future: the agent checks all policies in seconds via direct tool calls — the same unified-lookup capability, just exercised instantly instead of by a human moving between screens.**
+3. *Today: documents and submission channel explained piecemeal, across several exchanges.* → **Future: documents, timing, and where/how to submit are returned together, in one pass.**
+4. *Today: timing confusion leads to wrong or premature submissions.* → **Future: timing is stated upfront before the client acts, not discovered after a wrong submission.**
+5. *Today: incomplete documents trigger rework, resubmission, and abandonment.* → **Future: genuinely ambiguous cases are caught and escalated to a human *before* a bad submission happens, not after — rework shifts from "fix a failed claim" to "one specialist review, with full context already attached."**
+
+This is the working model in narrative form; the categorized detail below (task split, role change, human-in-the-loop, enablement) is the same model broken into Sun Life's four requested dimensions.
+
 **Future state — what changes:**
 
 - **Tier 1 (self-serve, agent-handled):** straightforward eligibility, document, and timing questions — the majority of initiation volume — are resolved directly by the agent, with no human touch required. This is the volume Root Cause 2 (systems fragmentation) currently forces onto the contact centre unnecessarily.
 - **Tier 2 (escalated, human-handled):** ambiguous or boundary cases — the ones the agent correctly declines to guess on — route to a human claims advisor with full conversation context attached (via `escalate_to_human`). The advisor's job shifts from *information retrieval* ("let me look that up across three systems") to *judgment calls* ("this is a genuine edge case that needs a person"). This is a higher-value use of frontline time, not a reduced one.
 - **New role, not a removed one — escalation quality monitoring.** △ Someone (existing team lead or a rotating claims-ops function) reviews escalated cases weekly to spot patterns: if the same ambiguous scenario escalates repeatedly, that's a signal to add it to the agent's covered scope, not a permanent manual queue. This closes the loop rather than letting Tier 2 grow unbounded over time.
 - **What doesn't change:** claim adjudication, payout decisions, and dispute handling remain fully human — this solution stops at claim initiation, by design (see Section 1 scope).
+- **Enablement — new skills the team needs.** Claims advisors need to build comfort reading structured agent output (the same confirmed-vs-unresolved framing shown in the product's Tool Trace) rather than starting each case from a blank policy lookup — this is a shift from *retrieving* information to *interpreting and acting on* information someone else already gathered. △ The escalation-quality-monitoring function above also requires a lightweight new skill: recognizing when a recurring escalation reason (e.g. `rider_status_unknown`) signals a gap worth closing in the agent's covered scope, versus a genuinely one-off case — a triage judgment call, not a technical one.
 
 **Change management note:** frontline staff should be positioned as gaining a triage/escalation-handling capability, not as being displaced by the agent — the agent absorbs repetitive lookup work, not judgment work. This framing matters operationally (staff buy-in) as much as it matters for the submission.
 

@@ -29,7 +29,7 @@ This prototype covers **claim initiation and eligibility determination only** �
 
 ## Architecture summary
 
-The agent runs a five-step tool-calling flow per interaction: retrieve customer policies → resolve the treatment/condition → check eligibility per policy → determine document/timing requirements → escalate to a human specialist if any step can't be resolved with confidence. Full detail in the BRD/PRD, Section 3.
+The agent runs a six-step tool-calling flow per interaction: retrieve customer policies → resolve the treatment/condition → check eligibility per policy → determine document, timing, and submission-channel requirements → escalate to a human specialist if any step can't be resolved with confidence. Full detail in the BRD/PRD, Section 3.
 
 ## Why this design
 

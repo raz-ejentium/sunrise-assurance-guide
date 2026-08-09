@@ -28,6 +28,7 @@ Implement as callable functions the agent can invoke mid-conversation:
 3. `get_document_requirements(policy_id, claim_type)` → returns required document checklist
 4. `get_claim_timing_rule(policy_id, treatment_code)` → returns whether pre-authorization is required before treatment, or a post-treatment claim is acceptable
 5. `escalate_to_human(reason, conversation_summary)` → generates a reference number, logs the handoff with full context attached
+6. `get_submission_guidance(policy_id, claim_type)` → returns where to submit (channel: portal, app, or branch), how (method), and an estimated turnaround time once complete documents are received (e.g. "5-7 business days")
 
 ## Step 3 — Build the conversation flow
 
@@ -36,7 +37,7 @@ The agent should, in order:
 2. Ask what happened — condition/treatment, when, which provider — in plain language
 3. Run eligibility check against all relevant policies (function 2)
 4. If more than one policy could apply, determine which policy should be claimed first
-5. Return document requirements and timing guidance together (functions 3 and 4)
+5. Return document requirements, timing guidance, and submission guidance together (functions 3, 4, and 6) — document requirements are guidance on what the customer needs to prepare and bring, not documents retrieved from a customer record
 6. At any point where eligibility, policy match, or coverage can't be determined with confidence — STOP and call function 5 instead of continuing to steps 4-5. Do not guess or infer an answer when the underlying data is ambiguous or missing.
 
 ## Step 4 — Build and test the escalation case explicitly
