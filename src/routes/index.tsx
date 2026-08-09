@@ -324,7 +324,8 @@ function ClaimsAssistant() {
           isLoading={isLoading}
           scenarios={scenarios}
           onScenario={runScenario}
-          activeCustomerId={customerId}
+          activeScenarioKey={activeScenarioKey}
+          labelMode={labelMode}
 
         />
       </section>
