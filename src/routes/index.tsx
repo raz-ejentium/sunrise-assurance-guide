@@ -306,7 +306,6 @@ function ClaimsAssistant() {
     (scenario: Scenario) => {
       if (isLoading) return;
       setInput("");
-      setCustomerId(scenario.customerId);
       setActiveScenarioKey(scenario.key);
       setMessages([]);
       setPending({
@@ -317,6 +316,7 @@ function ClaimsAssistant() {
     },
     [isLoading, setMessages],
   );
+
 
   // Send only once the chat session has been rebuilt for the scenario's member,
   // otherwise the member switch tears down the instance and drops the message.
