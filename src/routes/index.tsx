@@ -321,9 +321,11 @@ function SessionBar({
 function EmptyState({
   scenarios,
   onRun,
+  disabled,
 }: {
   scenarios: Scenario[];
   onRun: (scenario: Scenario) => void;
+  disabled: boolean;
 }) {
   return (
     <div className="py-8">
@@ -339,21 +341,31 @@ function EmptyState({
 
       <div className="mt-8">
         <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
+        <p className="mb-3 text-[12px] text-muted-foreground">
+          Each scenario runs as the member it was written for, and switches the selector to them.
+        </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
             <button
               key={scenario.key}
               type="button"
+              disabled={disabled}
               onClick={() => onRun(scenario)}
-              className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80"
+              className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80 disabled:opacity-50"
             >
-              <div className="text-[13px] font-semibold text-foreground">{scenario.label}</div>
+              <div className="text-[13px] font-semibold text-foreground">
+                {scenario.label}
+                {scenario.memberName ? (
+                  <span className="font-normal text-muted-foreground"> — {scenario.memberName}</span>
+                ) : null}
+              </div>
               <div className="mt-0.5 text-[12px] text-muted-foreground">{scenario.hint}</div>
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
                 "{scenario.prompt}"
               </div>
             </button>
           ))}
+
         </div>
       </div>
     </div>
