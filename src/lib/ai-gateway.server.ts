@@ -9,7 +9,7 @@ const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
  * conversation that halts after a tool call. Peek at the stream: if the whole
  * response turns out to be empty, transparently re-issue the request.
  */
-const EMPTY_COMPLETION_RETRIES = 2;
+const EMPTY_COMPLETION_RETRIES = 1;
 
 function isMeaningfulEvent(payload: string): boolean {
   if (!payload || payload === "[DONE]") return false;
