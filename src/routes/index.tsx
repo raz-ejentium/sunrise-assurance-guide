@@ -325,7 +325,6 @@ function ClaimsAssistant() {
         />
       </section>
 
-      </section>
 
 
       <div className="hidden min-h-0 lg:block">
