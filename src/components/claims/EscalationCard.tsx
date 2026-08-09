@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, HelpCircle, Phone } from "lucide-react";
+import { AlertTriangle, CheckCircle2, HelpCircle, Phone, RotateCcw } from "lucide-react";
 
 export type EscalationOutput = {
   escalated: boolean;
@@ -10,7 +10,13 @@ export type EscalationOutput = {
   what_could_not_be_determined: string | null;
 };
 
-export function EscalationCard({ data }: { data: EscalationOutput }) {
+export function EscalationCard({
+  data,
+  onRestart,
+}: {
+  data: EscalationOutput;
+  onRestart?: () => void;
+}) {
   return (
     <div className="my-3 overflow-hidden rounded-lg border-2 border-warning/60 bg-card shadow-panel">
       <div className="flex items-center gap-2 border-b border-warning/40 bg-warning/10 px-4 py-2.5">
@@ -53,6 +59,20 @@ export function EscalationCard({ data }: { data: EscalationOutput }) {
           <Phone className="mt-0.5 size-3.5 shrink-0" aria-hidden />
           <span>{data.handoff_message}</span>
         </div>
+
+        {onRestart && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border pt-3 text-[13px] text-muted-foreground">
+            <span>Reference saved. Start a new conversation to ask about another treatment.</span>
+            <button
+              type="button"
+              onClick={onRestart}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-[12px] text-foreground transition-colors hover:border-accent"
+            >
+              <RotateCcw className="size-3.5" aria-hidden />
+              Start a new conversation
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
