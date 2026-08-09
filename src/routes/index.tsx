@@ -80,39 +80,116 @@ function formatMember(mode: LabelMode, id: string, name?: string) {
   return `${id} · ${name}`;
 }
 
-const SCENARIOS: Scenario[] = [
-  {
-    key: "happy",
-    label: "Happy path",
-    hint: "Angioplasty — covered outright by the personal medical card",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt:
-      "I had a coronary angioplasty with a stent fitted at Gleneagles last Tuesday. What do I need to do to claim?",
-  },
-  {
-    key: "boundary",
-    label: "Coverage boundary",
-    hint: "Bariatric surgery — two policies disagree, rider status unconfirmed",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt:
-      "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
-  },
-  {
-    key: "waiting",
-    label: "Waiting period",
-    hint: "Dental surgery — only the new dental plan covers it, and it's still in waiting",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt:
-      "I need a surgical extraction of an impacted wisdom tooth next month. Can I claim for it?",
-  },
-  {
-    key: "unknown",
-    label: "Unknown treatment",
-    hint: "Cornea transplant — absent from the treatment reference table",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
-  },
-];
+// Each member has their own scenario set, driven by the coverage rows actually
+// seeded for their policies.
+const SCENARIOS_BY_CUSTOMER: Record<string, Scenario[]> = {
+  "CUST-001": [
+    {
+      key: "happy",
+      label: "Happy path",
+      hint: "Angioplasty — covered outright by the personal medical card",
+      customerId: "CUST-001",
+      prompt:
+        "I had a coronary angioplasty with a stent fitted at Gleneagles last Tuesday. What do I need to do to claim?",
+    },
+    {
+      key: "boundary",
+      label: "Coverage boundary",
+      hint: "Bariatric surgery — two policies disagree, rider status unconfirmed",
+      customerId: "CUST-001",
+      prompt:
+        "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
+    },
+    {
+      key: "waiting",
+      label: "Waiting period",
+      hint: "Dental surgery — only the new dental plan covers it, and it's still in waiting",
+      customerId: "CUST-001",
+      prompt:
+        "I need a surgical extraction of an impacted wisdom tooth next month. Can I claim for it?",
+    },
+    {
+      key: "unknown",
+      label: "Unknown treatment",
+      hint: "Cornea transplant — absent from the treatment reference table",
+      customerId: "CUST-001",
+      prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
+    },
+  ],
+  "CUST-002": [
+    {
+      key: "happy",
+      label: "Happy path",
+      hint: "Emergency appendectomy — covered with no waiting period",
+      customerId: "CUST-002",
+      prompt:
+        "I had an emergency appendectomy at Sunway Medical Centre last week. How do I claim for it?",
+    },
+    {
+      key: "single-policy",
+      label: "Single-policy limit",
+      hint: "Bariatric surgery — nothing on his only policy schedule, so it can't be confirmed",
+      customerId: "CUST-002",
+      prompt: "I'm considering bariatric surgery. Does my policy cover that?",
+    },
+    {
+      key: "unknown",
+      label: "Unknown treatment",
+      hint: "Cornea transplant — absent from the treatment reference table",
+      customerId: "CUST-002",
+      prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
+    },
+  ],
+  "CUST-003": [
+    {
+      key: "waiting",
+      label: "Waiting period",
+      hint: "Knee arthroscopy — 24-month waiting period from the effective date",
+      customerId: "CUST-003",
+      prompt:
+        "My surgeon has scheduled a knee arthroscopy for me next month. Can I claim for it?",
+    },
+    {
+      key: "maternity",
+      label: "Maternity timing",
+      hint: "Maternity delivery — 10-month waiting period on the personal card",
+      customerId: "CUST-003",
+      prompt: "I'm pregnant and due in four months. Will my delivery be covered?",
+    },
+    {
+      key: "happy",
+      label: "Happy path",
+      hint: "Emergency appendectomy — covered with no waiting period",
+      customerId: "CUST-003",
+      prompt: "I had an emergency appendectomy last Friday. What do I need to do to claim?",
+    },
+    {
+      key: "off-schedule",
+      label: "Not on schedule",
+      hint: "Angioplasty — absent from her policy schedule",
+      customerId: "CUST-003",
+      prompt:
+        "I've been told I may need a coronary angioplasty with a stent. Is that covered on my plan?",
+    },
+  ],
+  "CUST-004": [
+    {
+      key: "lapsed",
+      label: "Lapsed policy",
+      hint: "Appendectomy — the employer group plan is no longer in force",
+      customerId: "CUST-004",
+      prompt: "I had an emergency appendectomy last month. Can I still claim under my group plan?",
+    },
+    {
+      key: "lapsed-planned",
+      label: "Lapsed at treatment",
+      hint: "Knee arthroscopy — planned treatment on a lapsed plan",
+      customerId: "CUST-004",
+      prompt: "I have a knee arthroscopy booked for next month. Am I covered for it?",
+    },
+  ],
+};
+
 
 
 function isToolPart(part: { type: string }): boolean {
