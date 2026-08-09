@@ -446,7 +446,7 @@ function ToolChip({ name, state }: { name: string; state: string }) {
   );
 }
 
-function MessageBlock({ message }: { message: UIMessage }) {
+function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: () => void }) {
   if (message.role === "user") {
     const text = message.parts
       .map((part) => (part.type === "text" ? part.text : ""))
@@ -501,7 +501,11 @@ function MessageBlock({ message }: { message: UIMessage }) {
       )}
 
       {escalations.map((escalation) => (
-        <EscalationCard key={escalation.reference_number} data={escalation} />
+        <EscalationCard
+          key={escalation.reference_number}
+          data={escalation}
+          onRestart={onRestart}
+        />
       ))}
 
       {blocks.map((block) => (
