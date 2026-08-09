@@ -389,32 +389,31 @@ function SessionBar({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2.5">
-        <span className="label-caps text-muted-foreground">Scenario</span>
-        <Select
-          value={activeScenarioKey}
-          onValueChange={(key) => {
-            const scenario = scenarios.find((s) => s.key === key);
-            if (scenario) onScenario(scenario);
-          }}
-          disabled={scenarioDisabled}
-        >
-          <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
-            <SelectValue placeholder="Choose a scenario" />
-          </SelectTrigger>
-          <SelectContent>
-            {scenarios.map((scenario) => (
-              <SelectItem key={scenario.key} value={scenario.key}>
-                {scenario.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {activeScenario && (
-          <span className="hidden rounded-full border border-accent bg-accent/10 px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-foreground xl:inline">
-            {activeScenario.label}
-          </span>
-        )}
+      {showScenarioPicker && (
+        <div className="flex items-center gap-2.5">
+          <span className="label-caps text-muted-foreground">Scenario</span>
+          <Select
+            value={activeScenarioKey}
+            onValueChange={(key) => {
+              const scenario = scenarios.find((s) => s.key === key);
+              if (scenario) onScenario(scenario);
+            }}
+            disabled={scenarioDisabled}
+          >
+            <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
+              <SelectValue placeholder="Choose a scenario" />
+            </SelectTrigger>
+            <SelectContent>
+              {scenarios.map((scenario) => (
+                <SelectItem key={scenario.key} value={scenario.key}>
+                  {scenario.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       </div>
 
       <div className="flex items-center gap-1.5">
