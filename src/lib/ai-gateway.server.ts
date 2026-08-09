@@ -110,16 +110,41 @@ export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
         headers.set(LOVABLE_AIG_RUN_ID_HEADER, runId);
       }
 
-      try {
-        const response = await fetch(input, { ...init, headers });
-        publishRunId(response.headers.get(LOVABLE_AIG_RUN_ID_HEADER) ?? undefined);
-        return response;
-      } catch (error) {
-        publishRunId(undefined);
-        throw error;
+      const isRetryable = typeof init?.body === "string";
+
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const response = await fetch(input, { ...init, headers });
+          publishRunId(response.headers.get(LOVABLE_AIG_RUN_ID_HEADER) ?? undefined);
+
+          if (!isRetryable || !response.ok || !response.body) return response;
+
+          const peeked = await peekForContent(response);
+          if (peeked) {
+            return new Response(replayStream(peeked.buffered, peeked.reader), {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            });
+          }
+
+          if (attempt >= EMPTY_COMPLETION_RETRIES) {
+            console.warn("[ai-gateway] empty completion after retries; returning empty stream");
+            return new Response("data: [DONE]\n\n", {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            });
+          }
+          console.warn("[ai-gateway] empty completion from model, retrying");
+        } catch (error) {
+          publishRunId(undefined);
+          throw error;
+        }
       }
     },
     getRunId: () => runId,
+
     waitForRunId: () => (runId ? Promise.resolve(runId) : runIdReady),
   };
 }
