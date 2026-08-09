@@ -341,14 +341,12 @@ function ClaimsAssistant() {
   }, [setMessages]);
 
 
-  const scenarios: Scenario[] = useMemo(
-    () =>
-      SCENARIOS.map((scenario) => {
-        const memberName = customers.find((c) => c.id === scenario.customerId)?.name;
-        return memberName ? { ...scenario, memberName } : scenario;
-      }),
-    [customers],
-  );
+  const scenarios: Scenario[] = useMemo(() => {
+    const list = SCENARIOS_BY_CUSTOMER[customerId] ?? [];
+    const memberName = customers.find((c) => c.id === customerId)?.name;
+    return memberName ? list.map((scenario) => ({ ...scenario, memberName })) : list;
+  }, [customers, customerId]);
+
 
   return (
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
