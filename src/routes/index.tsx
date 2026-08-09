@@ -618,24 +618,12 @@ function EmptyState({
               className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80 disabled:opacity-50"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[13px] font-semibold text-foreground">
-                  {labelMode === "name" ? (
-                    scenario.memberName
-                  ) : (
-                    <>
-                      <span className="font-mono font-normal text-muted-foreground">
-                        {scenario.customerId}
-                      </span>
-                      {labelMode === "both" && scenario.memberName
-                        ? ` · ${scenario.memberName}`
-                        : ""}
-                    </>
-                  )}
-                </span>
+                <span className="text-[13px] font-semibold text-foreground">{scenario.label}</span>
                 <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
-                  {scenario.label}
+                  {formatMember(labelMode, scenario.customerId, scenario.memberName)}
                 </span>
               </div>
+
               <div className="mt-1 text-[12px] text-muted-foreground">{scenario.hint}</div>
 
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
