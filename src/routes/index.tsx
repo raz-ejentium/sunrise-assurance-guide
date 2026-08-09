@@ -230,6 +230,7 @@ function ClaimsAssistant() {
       if (isLoading) return;
       setInput("");
       setCustomerId(scenario.customerId);
+      setActiveScenarioKey(scenario.key);
       setMessages([]);
       setPending({
         runId: `${scenario.key}-${Date.now()}`,
