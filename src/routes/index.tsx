@@ -340,6 +340,12 @@ function SessionBar({
   onReset,
   canReset,
   resetDisabled,
+  labelMode,
+  onLabelModeChange,
+  scenarios,
+  activeScenarioKey,
+  onScenario,
+  scenarioDisabled,
 }: {
   customers: DemoCustomer[];
   customerId: string;
@@ -348,7 +354,14 @@ function SessionBar({
   onReset: () => void;
   canReset: boolean;
   resetDisabled: boolean;
+  labelMode: LabelMode;
+  onLabelModeChange: (mode: LabelMode) => void;
+  scenarios: Scenario[];
+  activeScenarioKey: string;
+  onScenario: (scenario: Scenario) => void;
+  scenarioDisabled: boolean;
 }) {
+  const activeScenario = scenarios.find((s) => s.key === activeScenarioKey);
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="flex items-center gap-2.5">
@@ -360,12 +373,69 @@ function SessionBar({
           <SelectContent>
             {customers.map((customer) => (
               <SelectItem key={customer.id} value={customer.id}>
-                <span className="font-mono">{customer.id}</span> · {customer.name}
+                {labelMode === "name" ? (
+                  customer.name
+                ) : (
+                  <>
+                    <span className="font-mono">{customer.id}</span>
+                    {labelMode === "both" && ` · ${customer.name}`}
+                  </>
+                )}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
+
+      <div className="flex items-center gap-2.5">
+        <span className="label-caps text-muted-foreground">Scenario</span>
+        <Select
+          value={activeScenarioKey}
+          onValueChange={(key) => {
+            const scenario = scenarios.find((s) => s.key === key);
+            if (scenario) onScenario(scenario);
+          }}
+          disabled={scenarioDisabled}
+        >
+          <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
+            <SelectValue placeholder="Choose a scenario" />
+          </SelectTrigger>
+          <SelectContent>
+            {scenarios.map((scenario) => (
+              <SelectItem key={scenario.key} value={scenario.key}>
+                {scenario.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {activeScenario && (
+          <span className="hidden rounded-full border border-accent bg-accent/10 px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-foreground xl:inline">
+            {activeScenario.label}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <span className="label-caps text-muted-foreground">Labels</span>
+        <div className="flex overflow-hidden rounded-full border border-border bg-card">
+          {LABEL_MODES.map((mode) => (
+            <button
+              key={mode.value}
+              type="button"
+              aria-pressed={labelMode === mode.value}
+              onClick={() => onLabelModeChange(mode.value)}
+              className={`px-2.5 py-1 text-[11px] transition-colors ${
+                labelMode === mode.value
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
 
       {activeCustomer && (
         <div className="flex flex-wrap items-center gap-1.5">
