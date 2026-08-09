@@ -248,6 +248,9 @@ function ClaimsAssistant() {
             setInput("");
           }}
           activeCustomer={activeCustomer}
+          onReset={resetConversation}
+          canReset={messages.length > 0}
+          resetDisabled={isLoading}
         />
 
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
@@ -257,7 +260,7 @@ function ClaimsAssistant() {
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
-                  <MessageBlock key={message.id} message={message} />
+                  <MessageBlock key={message.id} message={message} onRestart={resetConversation} />
                 ))}
                 {status === "submitted" && <Thinking />}
               </div>
