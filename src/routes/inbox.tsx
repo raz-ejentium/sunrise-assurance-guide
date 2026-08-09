@@ -128,7 +128,10 @@ function InboxPage() {
           </p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-4">
+        <>
+        <SummaryBar items={escalations} />
+        <ul className="mt-4 space-y-4">
+
           {escalations.map((item) => (
             <li
               key={item.id}
