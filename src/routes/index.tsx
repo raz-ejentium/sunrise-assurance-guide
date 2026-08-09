@@ -129,10 +129,23 @@ function ClaimsAssistantPage() {
 
 function ClaimsAssistant() {
   const { data: customers = [] } = useQuery(customersQuery);
-  const [customerId, setCustomerId] = useState<string>(customers[0]?.id ?? "");
+  const [customerId, setCustomerId] = useState<string>(DEMO_CUSTOMER_ID);
   const [input, setInput] = useState("");
+  const [labelMode, setLabelMode] = useState<LabelMode>("both");
+  const [activeScenarioKey, setActiveScenarioKey] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Read after hydration so server and client render the same first pass.
+  useEffect(() => {
+    const stored = window.localStorage.getItem(LABEL_MODE_STORAGE_KEY);
+    if (stored === "id" || stored === "name" || stored === "both") setLabelMode(stored);
+  }, []);
+
+  const changeLabelMode = useCallback((mode: LabelMode) => {
+    setLabelMode(mode);
+    window.localStorage.setItem(LABEL_MODE_STORAGE_KEY, mode);
+  }, []);
 
   useEffect(() => {
     if (!customerId && customers.length > 0) setCustomerId(customers[0]!.id);
