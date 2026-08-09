@@ -451,11 +451,11 @@ function SessionBar({
 
   return (
     <div className="flex flex-col border-b border-border bg-parchment">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 sm:px-8">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-3 px-4 py-3 sm:flex sm:flex-wrap sm:px-8">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="label-caps shrink-0 text-muted-foreground">Member</span>
           <Select value={customerId} onValueChange={onCustomerChange}>
-            <SelectTrigger className="h-8 w-[210px] bg-card text-[13px]">
+            <SelectTrigger className="h-8 min-w-0 flex-1 border-accent/60 bg-card text-[13px] shadow-raised sm:w-[210px] sm:flex-none">
               <SelectValue placeholder="Select a member" />
             </SelectTrigger>
             <SelectContent>
@@ -476,7 +476,7 @@ function SessionBar({
         </div>
 
         {showScenarioPicker && (
-          <div className="flex items-center gap-2.5">
+          <div className="col-span-2 flex min-w-0 items-center gap-2.5 sm:col-span-1">
             <span className="label-caps shrink-0 text-muted-foreground">Scenario</span>
             <Select
               value={activeScenarioKey}
@@ -486,7 +486,7 @@ function SessionBar({
               }}
               disabled={scenarioDisabled}
             >
-              <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
+              <SelectTrigger className="h-8 min-w-0 flex-1 bg-card text-[13px] sm:w-[190px] sm:flex-none">
                 <SelectValue placeholder="Choose a scenario" />
               </SelectTrigger>
               <SelectContent>
@@ -500,7 +500,7 @@ function SessionBar({
           </div>
         )}
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5 sm:border-l sm:border-border sm:pl-5">
           <span className="label-caps shrink-0 text-muted-foreground">Labels</span>
           <div className="flex overflow-hidden rounded-full border border-border bg-card">
             {LABEL_MODES.map((mode) => (
@@ -521,28 +521,29 @@ function SessionBar({
           </div>
         </div>
 
-        <div className="ml-auto hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
+        <div className="ml-auto hidden shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
           <ShieldCheck className="size-3.5" aria-hidden />
           Synthetic data · no adjudication
         </div>
       </div>
 
       {activeCustomer && (
-        <div className="flex min-h-[38px] items-center gap-3 border-t border-border/60 px-4 py-2 sm:px-8">
-          <span className="label-caps flex shrink-0 items-center gap-1.5 border-l-2 border-l-accent pl-2 text-muted-foreground">
-            Policies
-            <span className="font-mono text-[10px] text-accent">
+        <div className="grid min-h-[54px] grid-cols-[auto_minmax(0,1fr)] items-start gap-3 border-t border-border bg-background/65 px-4 py-3 shadow-[inset_0_1px_0_var(--color-card)] sm:items-center sm:px-8">
+          <div className="flex shrink-0 items-center gap-2 pt-1 sm:pt-0">
+            <span className="h-4 w-1 rounded-full bg-accent" aria-hidden />
+            <span className="label-caps text-muted-foreground">Policies</span>
+            <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-secondary px-1.5 py-0.5 font-mono text-[10px] font-semibold text-secondary-foreground">
               {activeCustomer.policies.length}
             </span>
-          </span>
-          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+          </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {activeCustomer.policies.map((policy) => (
               <span
                 key={policy.id}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] ${
+                className={`inline-flex max-w-full items-center gap-1.5 rounded-full border py-1 pl-2.5 text-[11px] shadow-raised ${
                   policy.status === "active"
-                    ? "border-border bg-card text-foreground"
-                    : "border-destructive/40 bg-destructive/10 text-destructive"
+                    ? "border-border bg-card pr-2.5 text-foreground"
+                    : "border-destructive/35 bg-card pr-1 text-foreground"
                 }`}
               >
                 <span
@@ -552,9 +553,11 @@ function SessionBar({
                   }`}
                 />
                 <span className="font-mono">{policy.id}</span>
-                <span>{policy.policy_type}</span>
+                <span className="truncate text-muted-foreground">· {policy.policy_type}</span>
                 {policy.status !== "active" && (
-                  <span className="uppercase tracking-wide">· {policy.status}</span>
+                  <span className="shrink-0 rounded-full bg-destructive/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-destructive">
+                    {policy.status}
+                  </span>
                 )}
               </span>
             ))}
