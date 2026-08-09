@@ -1,36 +1,40 @@
-# Smart Claims Initiation Assistant
+# Sunrise Assurance — Smart Claims Initiation Agent
 
-A prototype conversational agent for health insurance claim initiation. It determines eligibility across a member's policies, explains what's covered and what isn't, and hands off to a human specialist rather than guessing when the answer is ambiguous.
+**Sun Life Malaysia · AI Vibe Coding Challenge**
+An agentic AI prototype that helps customers determine claim eligibility, required documents, and timing across their policies — and escalates cleanly to a human specialist when it can't determine an answer with confidence, rather than guessing.
 
-## What's in the app
+## Live demo
 
-- **Claims assistant** (`/`) — member selector, one-click scenario presets, streaming chat, and a live trace panel showing every tool call the agent makes with its arguments and returned payload.
-- **Escalation inbox** (`/inbox`) — durable handoff records with reference number, trigger reason, a summary count and reason breakdown, and Open / In Review / Resolved status on each card.
-- **Decision log** (`/decision-log`) — the architectural decisions, escalation triggers, and known limitations behind the build.
+🔗 **[sunrise-assurance-guide.lovable.app](https://sunrise-assurance-guide.lovable.app/)**
 
-## Agent tools
+No login required. Use the scenario buttons on the Claims assistant page, or select a member and describe a treatment freely.
 
-`get_customer_policies`, `check_eligibility`, `get_document_requirements`, `get_claim_timing_rule`, and `escalate_to_human`. Escalation is preferred over speculation: conflicting policies, unknown treatments, and unresolved rider status all trigger a human handoff.
+**Recommended path to see the agentic behaviour in action:**
+1. Open **Claims assistant**, select member **Linda Chen**
+2. Click the **"Coverage boundary"** scenario (or ask about bariatric surgery coverage)
+3. Watch the **Agent Tool Trace** panel (right side) — every function call and its output is shown live, so you can verify no coverage answer is invented
+4. The agent will distinguish a *confirmed* exclusion from a *genuinely indeterminate* one, and hand off to a human with a reference number (e.g. `ESC-2026-1045`)
+5. Check the **Escalation inbox** page to see that handoff as a real, structured record — and the **Decision log** page for the build's own working notes
 
-## Development
+## Documents in this repo
 
-You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+| File | What it is |
+|---|---|
+| `Sun_Life_Smart_Claims_BRD_PRD.md` | Full Business/Product Requirements Document — problem framing, root cause analysis, agent architecture, operating model, governance, business metrics, cost-effectiveness, and a decision log covering how and why this was built the way it was |
+| `Lovable_Build_Prompt.md` | The structured prompt used to drive the actual build — included as evidence of process, not just output |
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## Scope
 
-## Built with
+This prototype covers **claim initiation and eligibility determination only** — not the full claims lifecycle. It does not adjudicate, price, or pay claims. All customer and policy data is synthetic.
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
-- Lovable Cloud (database, auth) and Lovable AI
+## Architecture summary
 
-## Working in Lovable
+The agent runs a five-step tool-calling flow per interaction: retrieve customer policies → resolve the treatment/condition → check eligibility per policy → determine document/timing requirements → escalate to a human specialist if any step can't be resolved with confidence. Full detail in the BRD/PRD, Section 3.
 
-Open the project in the [Lovable editor](https://lovable.dev) and keep building. With GitHub connected, every change made in Lovable commits straight to this repository, and pushes here sync back into Lovable.
+## Why this design
+
+Two live-tested cases anchor the design decisions in this repo:
+- A **clean coverage case** (e.g. root canal treatment) resolves end-to-end with document checklist and timing guidance, no human touch needed
+- A **coverage-boundary case** (bariatric surgery across two policies, one with an unconfirmed rider status) correctly refuses to guess, splits its findings into confirmed vs. unresolved, and escalates with full context attached — verified live, references `ESC-2026-1044` and `ESC-2026-1045`
+
+Full reasoning behind these choices — including why Lovable was chosen after comparing outputs across four build platforms, and a correction made to an early factual claim in the BRD — is in the Decision Log section of the BRD/PRD.
