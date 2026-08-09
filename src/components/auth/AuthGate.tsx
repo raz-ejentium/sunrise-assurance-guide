@@ -31,6 +31,10 @@ export function useSupabaseSession() {
 export function AuthGate({ children }: { children: ReactNode }) {
   const { session, loading } = useSupabaseSession();
 
+  // Demo mode: no sign-in required.
+  if (DEMO_OPEN_ACCESS) return <>{children}</>;
+
+
   if (loading) {
     return (
       <main className="flex flex-1 items-center justify-center p-10">
