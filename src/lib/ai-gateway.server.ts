@@ -134,6 +134,7 @@ export function createLovableAiGatewayRunIdFetch(
       }
 
       const isRetryable = typeof body === "string";
+      if (typeof body === "string") console.log("[ai-gateway][re]", body.includes("reasoning_effort"), body.length);
 
       for (let attempt = 0; ; attempt++) {
         try {
