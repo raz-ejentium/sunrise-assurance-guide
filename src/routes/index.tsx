@@ -293,6 +293,7 @@ function ClaimsAssistant() {
           activeScenarioKey={activeScenarioKey}
           onScenario={runScenario}
           scenarioDisabled={isLoading}
+          showScenarioPicker={messages.length > 0}
         />
 
 
@@ -322,13 +323,9 @@ function ClaimsAssistant() {
           onChange={setInput}
           onSubmit={() => submit(input)}
           isLoading={isLoading}
-          scenarios={scenarios}
-          onScenario={runScenario}
-          activeScenarioKey={activeScenarioKey}
-          labelMode={labelMode}
-
         />
       </section>
+
 
 
       <div className="hidden min-h-0 lg:block">
@@ -352,6 +349,7 @@ function SessionBar({
   activeScenarioKey,
   onScenario,
   scenarioDisabled,
+  showScenarioPicker,
 }: {
   customers: DemoCustomer[];
   customerId: string;
@@ -366,8 +364,9 @@ function SessionBar({
   activeScenarioKey: string;
   onScenario: (scenario: Scenario) => void;
   scenarioDisabled: boolean;
+  showScenarioPicker: boolean;
 }) {
-  const activeScenario = scenarios.find((s) => s.key === activeScenarioKey);
+
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="flex items-center gap-2.5">
@@ -393,33 +392,32 @@ function SessionBar({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2.5">
-        <span className="label-caps text-muted-foreground">Scenario</span>
-        <Select
-          value={activeScenarioKey}
-          onValueChange={(key) => {
-            const scenario = scenarios.find((s) => s.key === key);
-            if (scenario) onScenario(scenario);
-          }}
-          disabled={scenarioDisabled}
-        >
-          <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
-            <SelectValue placeholder="Choose a scenario" />
-          </SelectTrigger>
-          <SelectContent>
-            {scenarios.map((scenario) => (
-              <SelectItem key={scenario.key} value={scenario.key}>
-                {scenario.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {activeScenario && (
-          <span className="hidden rounded-full border border-accent bg-accent/10 px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-foreground xl:inline">
-            {activeScenario.label}
-          </span>
-        )}
-      </div>
+      {showScenarioPicker && (
+        <div className="flex items-center gap-2.5">
+          <span className="label-caps text-muted-foreground">Scenario</span>
+          <Select
+            value={activeScenarioKey}
+            onValueChange={(key) => {
+              const scenario = scenarios.find((s) => s.key === key);
+              if (scenario) onScenario(scenario);
+            }}
+            disabled={scenarioDisabled}
+          >
+            <SelectTrigger className="h-8 w-[190px] bg-card text-[13px]">
+              <SelectValue placeholder="Choose a scenario" />
+            </SelectTrigger>
+            <SelectContent>
+              {scenarios.map((scenario) => (
+                <SelectItem key={scenario.key} value={scenario.key}>
+                  {scenario.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+
 
       <div className="flex items-center gap-1.5">
         <span className="label-caps text-muted-foreground">Labels</span>
@@ -677,59 +675,17 @@ function Composer({
   onChange,
   onSubmit,
   isLoading,
-  scenarios,
-  onScenario,
-  activeScenarioKey,
-  labelMode,
 }: {
   ref: React.Ref<HTMLTextAreaElement>;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   isLoading: boolean;
-  scenarios: Scenario[];
-  onScenario: (scenario: Scenario) => void;
-  activeScenarioKey: string;
-  labelMode: LabelMode;
 }) {
   return (
     <div className="border-t border-border bg-parchment px-4 py-3 sm:px-8">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="label-caps mr-1 text-muted-foreground">Switch scenario</span>
-          {scenarios.map((scenario) => {
-            const isActive = scenario.key === activeScenarioKey;
-            return (
-              <button
-                key={scenario.key}
-                type="button"
-                disabled={isLoading}
-                aria-current={isActive ? "true" : undefined}
-                title={`${formatMember(labelMode, scenario.customerId, scenario.memberName)} — ${scenario.hint}`}
-                onClick={() => onScenario(scenario)}
-                className={`rounded-full border px-2.5 py-1 text-[11.5px] transition-colors disabled:opacity-50 ${
-                  isActive
-                    ? "border-accent bg-accent/10 text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-accent hover:text-foreground"
-                }`}
-              >
-                {labelMode === "name" ? (
-                  scenario.memberName
-                ) : (
-                  <>
-                    <span className="font-mono">{scenario.customerId}</span>
-                    {labelMode === "both" && scenario.memberName
-                      ? ` · ${scenario.memberName}`
-                      : ""}
-                  </>
-                )}
-                <span className="hidden sm:inline"> — {scenario.label.toLowerCase()}</span>
-              </button>
 
-            );
-          })}
-
-        </div>
 
 
 
