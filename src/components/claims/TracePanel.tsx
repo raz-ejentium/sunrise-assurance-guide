@@ -15,6 +15,7 @@ const TOOL_LABELS: Record<string, string> = {
   check_eligibility: "Checking eligibility",
   get_document_requirements: "Fetching document checklist",
   get_claim_timing_rule: "Checking timing rule",
+  get_submission_guidance: "Fetching submission guidance",
   escalate_to_human: "Escalating to human",
 };
 
