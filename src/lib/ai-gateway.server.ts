@@ -122,6 +122,7 @@ export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
       }
 
       const isRetryable = typeof init?.body === "string";
+      if (typeof init?.body === "string") console.log("[ai-gateway][body]", init.body.slice(0, 300));
 
       for (let attempt = 0; ; attempt++) {
         try {
