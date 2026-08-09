@@ -401,6 +401,10 @@ function ClaimsAssistant() {
           onChange={setInput}
           onSubmit={() => submit(input)}
           isLoading={isLoading}
+          canReset={messages.length > 0}
+          onReset={resetConversation}
+          resetDisabled={isLoading}
+
         />
       </section>
 
