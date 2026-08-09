@@ -553,22 +553,12 @@ function SessionBar({
 
 
       <div className="ml-auto flex items-center gap-3">
-        {canReset && (
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={resetDisabled}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
-          >
-            <RotateCcw className="size-3.5" aria-hidden />
-            New conversation
-          </button>
-        )}
         <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground md:flex">
           <ShieldCheck className="size-3.5" aria-hidden />
           Synthetic data · no adjudication
         </div>
       </div>
+
     </div>
   );
 }
