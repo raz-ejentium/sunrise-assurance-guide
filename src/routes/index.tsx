@@ -65,7 +65,7 @@ const SCENARIOS: Scenario[] = [
   {
     key: "happy",
     label: "Happy path",
-    hint: "Single policy, clean coverage",
+    hint: "One active policy — appendectomy is cleanly covered",
     customerId: "CUST-002",
     prompt:
       "I had an emergency appendectomy at Gleneagles last Tuesday. What do I need to do to claim?",
@@ -73,7 +73,7 @@ const SCENARIOS: Scenario[] = [
   {
     key: "boundary",
     label: "Coverage boundary",
-    hint: "Two policies conflict — must escalate",
+    hint: "Two policies that conflict on bariatric surgery — must escalate",
     customerId: "CUST-001",
     prompt:
       "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
@@ -81,18 +81,19 @@ const SCENARIOS: Scenario[] = [
   {
     key: "waiting",
     label: "Waiting period",
-    hint: "Policy too new for the procedure",
+    hint: "Policy too new for knee surgery",
     customerId: "CUST-003",
     prompt: "I need keyhole surgery on my knee next month. Can I claim for it?",
   },
   {
     key: "unknown",
     label: "Unknown treatment",
-    hint: "Not in the reference table",
+    hint: "Asks about a treatment absent from the reference table",
     customerId: "CUST-004",
     prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
   },
 ];
+
 
 function isToolPart(part: { type: string }): boolean {
   return part.type.startsWith("tool-");
