@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
+import { useMemo } from "react";
+
 
 import { listEscalations } from "@/lib/demo.functions";
 import { AuthGate } from "@/components/auth/AuthGate";
@@ -46,6 +48,56 @@ const REASON_LABELS: Record<string, string> = {
   out_of_scope: "Out of scope",
 };
 
+const STATUS_STYLES: Record<string, { label: string; className: string }> = {
+  open: { label: "Open", className: "border-warning/40 bg-warning/10 text-warning" },
+  in_review: { label: "In Review", className: "border-accent/40 bg-accent/10 text-accent" },
+  resolved: { label: "Resolved", className: "border-success/40 bg-success/10 text-success" },
+};
+
+function StatusBadge({ status }: { status: string | null | undefined }) {
+  const key = (status ?? "").toLowerCase().replace(/[\s-]+/g, "_");
+  const style = STATUS_STYLES[key] ?? STATUS_STYLES["open"]!;
+  return (
+    <span
+      className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${style.className}`}
+    >
+      {style.label}
+    </span>
+  );
+}
+
+function SummaryBar({ items }: { items: { reason_code: string }[] }) {
+  const breakdown = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of items) {
+      counts.set(item.reason_code, (counts.get(item.reason_code) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [items]);
+
+  const total = items.length;
+  const single = breakdown.length === 1 && breakdown[0];
+  const summary = single
+    ? `${total === 2 ? "both" : "all"} triggered by ${REASON_LABELS[single[0]] ?? single[0]}`
+    : breakdown
+        .map(([code, count]) => `${count} ${REASON_LABELS[code] ?? code}`)
+        .join(" · ");
+
+  return (
+    <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-parchment px-4 py-3">
+      <span className="font-serif text-[15px] text-foreground">
+        {total} escalation{total === 1 ? "" : "s"}
+      </span>
+      <span className="text-muted-foreground" aria-hidden>
+        —
+      </span>
+      <span className="text-[12.5px] text-muted-foreground">{summary}</span>
+    </div>
+  );
+}
+
+
+
 function InboxRoute() {
   return (
     <AuthGate>
@@ -76,7 +128,10 @@ function InboxPage() {
           </p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-4">
+        <>
+        <SummaryBar items={escalations} />
+        <ul className="mt-4 space-y-4">
+
           {escalations.map((item) => (
             <li
               key={item.id}
@@ -89,6 +144,8 @@ function InboxPage() {
                 <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[11px] font-medium text-warning">
                   {REASON_LABELS[item.reason_code] ?? item.reason_code}
                 </span>
+                <StatusBadge status={item.status} />
+
                 <span className="text-[12.5px] text-muted-foreground">
                   {item.customer_name} · <span className="font-mono">{item.customer_id}</span>
                 </span>
@@ -127,7 +184,9 @@ function InboxPage() {
             </li>
           ))}
         </ul>
+        </>
       )}
+
     </main>
   );
 }
