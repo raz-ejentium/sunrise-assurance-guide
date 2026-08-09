@@ -4,6 +4,8 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { DEMO_OPEN_ACCESS } from "@/lib/demo-mode";
+
 
 export function useSupabaseSession() {
   const [session, setSession] = useState<Session | null>(null);

@@ -1,14 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { DEMO_OPEN_ACCESS } from "@/lib/demo-mode";
 
-// Member, policy and escalation data is no longer readable with the public key,
-// and these server functions require an authenticated staff session before
-// reading it with the trusted server-only client.
+// Demo mode leaves these reads open; flip DEMO_OPEN_ACCESS to require a staff session.
+const authGuard = DEMO_OPEN_ACCESS ? [] : [requireSupabaseAuth];
+
 async function serverClient() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
 }
+
 
 export type DemoCustomer = {
   id: string;
