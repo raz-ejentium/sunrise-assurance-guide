@@ -293,6 +293,7 @@ function ClaimsAssistant() {
           activeScenarioKey={activeScenarioKey}
           onScenario={runScenario}
           scenarioDisabled={isLoading}
+          showScenarioPicker={messages.length > 0}
         />
 
 
