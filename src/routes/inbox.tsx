@@ -92,9 +92,9 @@ function SummaryBar({ items }: { items: { reason_code: string }[] }) {
   const total = items.length;
   const single = breakdown.length === 1 && breakdown[0];
   const summary = single
-    ? `${total === 2 ? "both" : "all"} triggered by ${REASON_LABELS[single[0]] ?? single[0]}`
+    ? `${total === 2 ? "both" : "all"} triggered by ${reasonLabel(single[0])}`
     : breakdown
-        .map(([code, count]) => `${count} ${REASON_LABELS[code] ?? code}`)
+        .map(([code, count]) => `${count} ${reasonLabel(code)}`)
         .join(" · ");
 
   return (
@@ -156,7 +156,7 @@ function InboxPage() {
                   {item.reference_number}
                 </span>
                 <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[11px] font-medium text-warning">
-                  {REASON_LABELS[item.reason_code] ?? item.reason_code}
+                  {reasonLabel(item.reason_code)}
                 </span>
                 <StatusBadge status={item.status} />
 
