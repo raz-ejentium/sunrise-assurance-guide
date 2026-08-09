@@ -388,6 +388,7 @@ function ToolChip({ name, state }: { name: string; state: string }) {
     check_eligibility: "Checked eligibility",
     get_document_requirements: "Retrieved document checklist",
     get_claim_timing_rule: "Checked timing rule",
+    get_submission_guidance: "Retrieved submission guidance",
     escalate_to_human: "Escalated to human",
   };
   const done = state === "output-available";
