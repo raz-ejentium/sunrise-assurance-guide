@@ -126,6 +126,16 @@ export const Route = createFileRoute("/api/chat")({
             execute: async ({ policy_id, treatment_code }) =>
               claims.getClaimTimingRule(policy_id, treatment_code),
           }),
+          get_submission_guidance: tool({
+            description:
+              "Return where and how to submit the claim (channel: portal, app or branch), the submission method, and an estimated turnaround time. Always call alongside get_document_requirements and get_claim_timing_rule.",
+            inputSchema: z.object({
+              policy_id: z.string(),
+              treatment_code: z.string(),
+            }),
+            execute: async ({ policy_id, treatment_code }) =>
+              claims.getSubmissionGuidance(policy_id, treatment_code),
+          }),
           escalate_to_human: tool({
             description:
               "Hand off to a human claims specialist. Logs the full context and returns a reference number. Call this instead of answering whenever eligibility, policy match, or coverage cannot be determined with confidence.",
