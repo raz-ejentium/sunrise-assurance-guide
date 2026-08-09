@@ -299,7 +299,12 @@ function ClaimsAssistant() {
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
           <div className="mx-auto max-w-3xl">
             {messages.length === 0 ? (
-              <EmptyState scenarios={scenarios} onRun={runScenario} disabled={isLoading} />
+              <EmptyState
+                scenarios={scenarios}
+                onRun={runScenario}
+                disabled={isLoading}
+                labelMode={labelMode}
+              />
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
