@@ -323,9 +323,8 @@ function ClaimsAssistant() {
           onSubmit={() => submit(input)}
           isLoading={isLoading}
         />
+      </section>
 
-
-        />
       </section>
 
 
