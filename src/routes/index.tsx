@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
-import { ArrowUp, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowUp, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { listCustomers, type DemoCustomer } from "@/lib/demo.functions";
