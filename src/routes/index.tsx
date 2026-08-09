@@ -258,6 +258,7 @@ function ClaimsAssistant() {
     setMessages([]);
     setInput("");
     setPending(null);
+    setActiveScenarioKey("");
     sentRunRef.current = null;
     inputRef.current?.focus();
   }, [setMessages]);
@@ -286,7 +287,14 @@ function ClaimsAssistant() {
           onReset={resetConversation}
           canReset={messages.length > 0}
           resetDisabled={isLoading}
+          labelMode={labelMode}
+          onLabelModeChange={changeLabelMode}
+          scenarios={scenarios}
+          activeScenarioKey={activeScenarioKey}
+          onScenario={runScenario}
+          scenarioDisabled={isLoading}
         />
+
 
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
           <div className="mx-auto max-w-3xl">
