@@ -15,7 +15,7 @@ export function EscalationCard({
   onRestart,
 }: {
   data: EscalationOutput;
-  onRestart?: () => void;
+  onRestart?: (() => void) | undefined;
 }) {
   return (
     <div className="my-3 overflow-hidden rounded-lg border-2 border-warning/60 bg-card shadow-panel">
