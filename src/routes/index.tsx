@@ -60,36 +60,56 @@ type Scenario = {
   memberName?: string;
 };
 
+// The demo runs as a single member; every scenario is produced by this
+// member's own seeded policy data rather than by swapping identities.
+const DEMO_CUSTOMER_ID = "CUST-001";
+
+type LabelMode = "id" | "name" | "both";
+
+const LABEL_MODES: { value: LabelMode; label: string }[] = [
+  { value: "id", label: "ID" },
+  { value: "name", label: "Name" },
+  { value: "both", label: "Both" },
+];
+
+const LABEL_MODE_STORAGE_KEY = "claims-demo-label-mode";
+
+function formatMember(mode: LabelMode, id: string, name?: string) {
+  if (mode === "id" || !name) return id;
+  if (mode === "name") return name;
+  return `${id} · ${name}`;
+}
 
 const SCENARIOS: Scenario[] = [
   {
     key: "happy",
     label: "Happy path",
-    hint: "One active policy — appendectomy is cleanly covered",
-    customerId: "CUST-002",
+    hint: "Angioplasty — covered outright by the personal medical card",
+    customerId: DEMO_CUSTOMER_ID,
     prompt:
-      "I had an emergency appendectomy at Gleneagles last Tuesday. What do I need to do to claim?",
+      "I had a coronary angioplasty with a stent fitted at Gleneagles last Tuesday. What do I need to do to claim?",
   },
   {
     key: "boundary",
     label: "Coverage boundary",
-    hint: "Two policies that conflict on bariatric surgery — must escalate",
-    customerId: "CUST-001",
+    hint: "Bariatric surgery — two policies disagree, rider status unconfirmed",
+    customerId: DEMO_CUSTOMER_ID,
     prompt:
       "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
   },
   {
     key: "waiting",
     label: "Waiting period",
-    hint: "Policy too new for knee surgery",
-    customerId: "CUST-003",
-    prompt: "I need keyhole surgery on my knee next month. Can I claim for it?",
+    hint: "Dental surgery — only the new dental plan covers it, and it's still in waiting",
+    customerId: DEMO_CUSTOMER_ID,
+    prompt:
+      "I need a surgical extraction of an impacted wisdom tooth next month. Can I claim for it?",
   },
   {
     key: "unknown",
     label: "Unknown treatment",
-    hint: "Asks about a treatment absent from the reference table",
-    customerId: "CUST-004",
+    hint: "Cornea transplant — absent from the treatment reference table",
+    customerId: DEMO_CUSTOMER_ID,
     prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
   },
 ];
