@@ -20,7 +20,7 @@ export type DemoCustomer = {
 };
 
 export const listCustomers = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware(authGuard)
   .handler(async () => {
   const supabase = await serverClient();
   const { data: customers, error } = await supabase
@@ -43,7 +43,7 @@ export const listCustomers = createServerFn({ method: "GET" })
 });
 
 export const listEscalations = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware(authGuard)
   .handler(async () => {
   const supabase = await serverClient();
   const { data, error } = await supabase
