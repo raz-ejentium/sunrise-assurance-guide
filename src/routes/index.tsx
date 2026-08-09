@@ -479,7 +479,7 @@ function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: 
 
   message.parts.forEach((part, index) => {
     if (part.type === "text") {
-      if (part.text.trim()) blocks.push({ key: `t-${index}`, text: part.text });
+      if (cleanAssistantText(part.text)) blocks.push({ key: `t-${index}`, text: part.text });
       return;
     }
     if (!isToolPart(part)) return;
