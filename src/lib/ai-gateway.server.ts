@@ -11,24 +11,23 @@ const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
  */
 const EMPTY_COMPLETION_RETRIES = 2;
 
-function isMeaningfulSseChunk(text: string): boolean {
-  for (const line of text.split("\n")) {
-    if (!line.startsWith("data:")) continue;
-    const payload = line.slice(5).trim();
-    if (!payload || payload === "[DONE]") continue;
-    try {
-      const parsed = JSON.parse(payload) as {
-        choices?: { delta?: { content?: string | null; tool_calls?: unknown } }[];
-      };
-      for (const choice of parsed.choices ?? []) {
-        const delta = choice.delta;
-        if (!delta) continue;
-        if (typeof delta.content === "string" && delta.content.length > 0) return true;
-        if (delta.tool_calls) return true;
-      }
-    } catch {
-      // Ignore partial JSON; the next chunk will complete it.
+function isMeaningfulEvent(payload: string): boolean {
+  if (!payload || payload === "[DONE]") return false;
+  try {
+    const parsed = JSON.parse(payload) as {
+      choices?: {
+        delta?: { content?: string | null; tool_calls?: unknown; reasoning_details?: unknown };
+      }[];
+    };
+    for (const choice of parsed.choices ?? []) {
+      const delta = choice.delta;
+      if (!delta) continue;
+      if (typeof delta.content === "string" && delta.content.length > 0) return true;
+      if (delta.tool_calls) return true;
+      if (delta.reasoning_details) return true;
     }
+  } catch {
+    // Ignore malformed events.
   }
   return false;
 }
@@ -36,6 +35,8 @@ function isMeaningfulSseChunk(text: string): boolean {
 /**
  * Reads from the stream until it sees real content. Returns the buffered chunks
  * plus the reader when the response is usable, or `null` when it was empty.
+ * SSE events can be split across network chunks, so frame them on blank lines
+ * before parsing.
  */
 async function peekForContent(response: Response): Promise<
   | { buffered: Uint8Array[]; reader: ReadableStreamDefaultReader<Uint8Array> }
@@ -45,20 +46,28 @@ async function peekForContent(response: Response): Promise<
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   const buffered: Uint8Array[] = [];
+  let pending = "";
 
   while (true) {
     const chunk = await reader.read();
-    if (chunk.done) {
-      return null;
-    }
+    if (chunk.done) return null;
     buffered.push(chunk.value);
-    const decoded = decoder.decode(chunk.value, { stream: true });
-    console.log("[ai-gateway][peek]", JSON.stringify(decoded).slice(0, 400));
-    if (isMeaningfulSseChunk(decoded)) {
-      return { buffered, reader };
+
+    pending += decoder.decode(chunk.value, { stream: true });
+    const events = pending.split("\n\n");
+    pending = events.pop() ?? "";
+
+    for (const event of events) {
+      for (const line of event.split("\n")) {
+        if (!line.startsWith("data:")) continue;
+        if (isMeaningfulEvent(line.slice(5).trim())) {
+          return { buffered, reader };
+        }
+      }
     }
   }
 }
+
 
 function replayStream(
   buffered: Uint8Array[],
