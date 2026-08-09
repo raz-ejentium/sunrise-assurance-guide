@@ -162,7 +162,13 @@ export const Route = createFileRoute("/api/chat")({
         };
 
         const initialRunId = getLovableAiGatewayRunId(request);
-        const gateway = createLovableAiGatewayProvider(key, initialRunId);
+        // Gemini ties tool calls to encrypted "thought signatures" that the
+        // OpenAI-compatible wire format cannot round-trip. With reasoning on,
+        // the model returns an empty step (finish_reason: no_content) once a
+        // couple of tool results are in the history and the run stalls midway.
+        const gateway = createLovableAiGatewayProvider(key, initialRunId, {
+          reasoning_effort: "none",
+        });
 
         const result = streamText({
           model: gateway("google/gemini-3.6-flash"),
@@ -174,11 +180,6 @@ export const Route = createFileRoute("/api/chat")({
           messages: await convertToModelMessages(messages as UIMessage[]),
           tools,
           stopWhen: stepCountIs(50),
-          // Gemini ties tool calls to encrypted "thought signatures" that the
-          // OpenAI-compatible wire format cannot round-trip, so with reasoning
-          // enabled the model returns an empty step (finish_reason no_content)
-          // once a couple of tool results are in the history and the run stalls.
-          providerOptions: { lovable: { reasoning_effort: "none" } },
 
           onError: ({ error }) => {
             console.error("[claims-agent] stream error", error);
