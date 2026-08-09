@@ -219,6 +219,14 @@ function ClaimsAssistant() {
     void sendMessage({ text: prompt });
   }, [pending, customerId, sendMessage]);
 
+  const resetConversation = useCallback(() => {
+    setMessages([]);
+    setInput("");
+    setPending(null);
+    sentRunRef.current = null;
+    inputRef.current?.focus();
+  }, [setMessages]);
+
 
   const scenarios: Scenario[] = useMemo(
     () =>
