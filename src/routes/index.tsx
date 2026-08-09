@@ -384,9 +384,10 @@ function EmptyState({
       </p>
 
       <div className="mt-8">
-        <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
+        <div className="label-caps mb-3 text-muted-foreground">Demo members</div>
         <p className="mb-3 text-[12px] text-muted-foreground">
-          Each scenario runs as the member it was written for, and switches the selector to them.
+          Each member holds different synthetic policy data, so each one demonstrates a different
+          outcome. Picking one switches the selector to that member and runs their question.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
@@ -397,13 +398,15 @@ function EmptyState({
               onClick={() => onRun(scenario)}
               className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80 disabled:opacity-50"
             >
-              <div className="text-[13px] font-semibold text-foreground">
-                {scenario.label}
-                {scenario.memberName ? (
-                  <span className="font-normal text-muted-foreground"> — {scenario.memberName}</span>
-                ) : null}
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[13px] font-semibold text-foreground">
+                  {scenario.memberName ?? scenario.customerId}
+                </span>
+                <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
+                  {scenario.label}
+                </span>
               </div>
-              <div className="mt-0.5 text-[12px] text-muted-foreground">{scenario.hint}</div>
+              <div className="mt-1 text-[12px] text-muted-foreground">{scenario.hint}</div>
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
                 "{scenario.prompt}"
               </div>
@@ -412,6 +415,7 @@ function EmptyState({
 
         </div>
       </div>
+
     </div>
   );
 }
