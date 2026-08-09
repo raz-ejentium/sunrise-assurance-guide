@@ -495,12 +495,18 @@ function Composer({
             <button
               key={scenario.key}
               type="button"
+              disabled={isLoading}
+              title={
+                scenario.memberName ? `Runs as ${scenario.memberName}` : "Runs as its demo member"
+              }
               onClick={() => onScenario(scenario)}
-              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:border-accent hover:text-foreground disabled:opacity-50"
             >
               {scenario.label}
+              {scenario.memberName ? ` — ${scenario.memberName}` : ""}
             </button>
           ))}
+
         </div>
 
         <form
