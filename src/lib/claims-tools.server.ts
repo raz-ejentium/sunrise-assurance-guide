@@ -365,3 +365,73 @@ export async function escalateToHuman(input: {
     reason: input.reason,
   };
 }
+
+const SUBMISSION_CHANNELS: Record<
+  string,
+  { channel: "portal" | "app" | "branch"; method: string; turnaround: string }
+> = {
+  "employer group plan": {
+    channel: "portal",
+    method:
+      "Submit through the Sunrise Assurance employer group portal under 'New claim', attaching scanned copies of every required document as PDF or JPG.",
+    turnaround: "10-15 business days once complete documents are received.",
+  },
+  "personal medical card": {
+    channel: "app",
+    method:
+      "Submit in the Sunrise Assurance mobile app under 'Claims > Start a claim', photographing each required document in good light.",
+    turnaround: "5-7 business days once complete documents are received.",
+  },
+};
+
+const BRANCH_FALLBACK = {
+  channel: "branch" as const,
+  method:
+    "Submit in person at any Sunrise Assurance branch with the original documents; a claims officer will scan and lodge them for you.",
+  turnaround: "10-15 business days once complete documents are received.",
+};
+
+export async function getSubmissionGuidance(policyId: string, treatmentCode: string) {
+  const { data: policy, error: policyError } = await supabaseAdmin
+    .from("policies")
+    .select("id, policy_type, insurer_name, status")
+    .eq("id", policyId)
+    .maybeSingle();
+  if (policyError) throw new Error(policyError.message);
+  if (!policy) {
+    return { found: false as const, confidence: "low" as const, note: "Unknown policy." };
+  }
+
+  const route = SUBMISSION_CHANNELS[policy.policy_type.toLowerCase()];
+  if (!route) {
+    return {
+      found: false as const,
+      confidence: "low" as const,
+      policy_id: policyId,
+      policy_type: policy.policy_type,
+      note: "No submission route is mapped for this policy type. Escalate rather than inventing a channel or turnaround.",
+    };
+  }
+
+  const { data: coverage } = await supabaseAdmin
+    .from("policy_coverage")
+    .select("pre_auth_required")
+    .eq("policy_id", policyId)
+    .eq("treatment_code", treatmentCode)
+    .maybeSingle();
+
+  return {
+    found: true as const,
+    confidence: "high" as const,
+    policy_id: policyId,
+    policy_type: policy.policy_type,
+    treatment_code: treatmentCode,
+    channel: route.channel,
+    method: route.method,
+    estimated_turnaround: route.turnaround,
+    pre_auth_route: coverage?.pre_auth_required
+      ? "Pre-authorisation must be lodged through the same channel at least 5 business days before the procedure; approval is usually returned within 3 business days."
+      : null,
+    note: "Turnaround is an estimate from the point complete documents are received, not a payment guarantee.",
+  };
+}
