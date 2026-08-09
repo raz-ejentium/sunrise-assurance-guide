@@ -80,39 +80,116 @@ function formatMember(mode: LabelMode, id: string, name?: string) {
   return `${id} · ${name}`;
 }
 
-const SCENARIOS: Scenario[] = [
-  {
-    key: "happy",
-    label: "Happy path",
-    hint: "Angioplasty — covered outright by the personal medical card",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt:
-      "I had a coronary angioplasty with a stent fitted at Gleneagles last Tuesday. What do I need to do to claim?",
-  },
-  {
-    key: "boundary",
-    label: "Coverage boundary",
-    hint: "Bariatric surgery — two policies disagree, rider status unconfirmed",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt:
-      "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
-  },
-  {
-    key: "waiting",
-    label: "Waiting period",
-    hint: "Dental surgery — only the new dental plan covers it, and it's still in waiting",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt:
-      "I need a surgical extraction of an impacted wisdom tooth next month. Can I claim for it?",
-  },
-  {
-    key: "unknown",
-    label: "Unknown treatment",
-    hint: "Cornea transplant — absent from the treatment reference table",
-    customerId: DEMO_CUSTOMER_ID,
-    prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
-  },
-];
+// Each member has their own scenario set, driven by the coverage rows actually
+// seeded for their policies.
+const SCENARIOS_BY_CUSTOMER: Record<string, Scenario[]> = {
+  "CUST-001": [
+    {
+      key: "happy",
+      label: "Happy path",
+      hint: "Angioplasty — covered outright by the personal medical card",
+      customerId: "CUST-001",
+      prompt:
+        "I had a coronary angioplasty with a stent fitted at Gleneagles last Tuesday. What do I need to do to claim?",
+    },
+    {
+      key: "boundary",
+      label: "Coverage boundary",
+      hint: "Bariatric surgery — two policies disagree, rider status unconfirmed",
+      customerId: "CUST-001",
+      prompt:
+        "My doctor has recommended bariatric surgery for me. I have two policies and I'm not sure which one covers it. Am I covered?",
+    },
+    {
+      key: "waiting",
+      label: "Waiting period",
+      hint: "Dental surgery — only the new dental plan covers it, and it's still in waiting",
+      customerId: "CUST-001",
+      prompt:
+        "I need a surgical extraction of an impacted wisdom tooth next month. Can I claim for it?",
+    },
+    {
+      key: "unknown",
+      label: "Unknown treatment",
+      hint: "Cornea transplant — absent from the treatment reference table",
+      customerId: "CUST-001",
+      prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
+    },
+  ],
+  "CUST-002": [
+    {
+      key: "happy",
+      label: "Happy path",
+      hint: "Emergency appendectomy — covered with no waiting period",
+      customerId: "CUST-002",
+      prompt:
+        "I had an emergency appendectomy at Sunway Medical Centre last week. How do I claim for it?",
+    },
+    {
+      key: "single-policy",
+      label: "Single-policy limit",
+      hint: "Bariatric surgery — nothing on his only policy schedule, so it can't be confirmed",
+      customerId: "CUST-002",
+      prompt: "I'm considering bariatric surgery. Does my policy cover that?",
+    },
+    {
+      key: "unknown",
+      label: "Unknown treatment",
+      hint: "Cornea transplant — absent from the treatment reference table",
+      customerId: "CUST-002",
+      prompt: "I'm booked in for a cornea transplant. Is that something I can claim?",
+    },
+  ],
+  "CUST-003": [
+    {
+      key: "waiting",
+      label: "Waiting period",
+      hint: "Knee arthroscopy — 24-month waiting period from the effective date",
+      customerId: "CUST-003",
+      prompt:
+        "My surgeon has scheduled a knee arthroscopy for me next month. Can I claim for it?",
+    },
+    {
+      key: "maternity",
+      label: "Maternity timing",
+      hint: "Maternity delivery — 10-month waiting period on the personal card",
+      customerId: "CUST-003",
+      prompt: "I'm pregnant and due in four months. Will my delivery be covered?",
+    },
+    {
+      key: "happy",
+      label: "Happy path",
+      hint: "Emergency appendectomy — covered with no waiting period",
+      customerId: "CUST-003",
+      prompt: "I had an emergency appendectomy last Friday. What do I need to do to claim?",
+    },
+    {
+      key: "off-schedule",
+      label: "Not on schedule",
+      hint: "Angioplasty — absent from her policy schedule",
+      customerId: "CUST-003",
+      prompt:
+        "I've been told I may need a coronary angioplasty with a stent. Is that covered on my plan?",
+    },
+  ],
+  "CUST-004": [
+    {
+      key: "lapsed",
+      label: "Lapsed policy",
+      hint: "Appendectomy — the employer group plan is no longer in force",
+      customerId: "CUST-004",
+      prompt: "I had an emergency appendectomy last month. Can I still claim under my group plan?",
+    },
+    {
+      key: "lapsed-planned",
+      label: "Lapsed at treatment",
+      hint: "Knee arthroscopy — planned treatment on a lapsed plan",
+      customerId: "CUST-004",
+      prompt: "I have a knee arthroscopy booked for next month. Am I covered for it?",
+    },
+  ],
+};
+
 
 
 function isToolPart(part: { type: string }): boolean {
@@ -229,7 +306,6 @@ function ClaimsAssistant() {
     (scenario: Scenario) => {
       if (isLoading) return;
       setInput("");
-      setCustomerId(scenario.customerId);
       setActiveScenarioKey(scenario.key);
       setMessages([]);
       setPending({
@@ -240,6 +316,7 @@ function ClaimsAssistant() {
     },
     [isLoading, setMessages],
   );
+
 
   // Send only once the chat session has been rebuilt for the scenario's member,
   // otherwise the member switch tears down the instance and drops the message.
@@ -264,14 +341,12 @@ function ClaimsAssistant() {
   }, [setMessages]);
 
 
-  const scenarios: Scenario[] = useMemo(
-    () =>
-      SCENARIOS.map((scenario) => {
-        const memberName = customers.find((c) => c.id === scenario.customerId)?.name;
-        return memberName ? { ...scenario, memberName } : scenario;
-      }),
-    [customers],
-  );
+  const scenarios: Scenario[] = useMemo(() => {
+    const list = SCENARIOS_BY_CUSTOMER[customerId] ?? [];
+    const memberName = customers.find((c) => c.id === customerId)?.name;
+    return memberName ? list.map((scenario) => ({ ...scenario, memberName })) : list;
+  }, [customers, customerId]);
+
 
   return (
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -280,9 +355,12 @@ function ClaimsAssistant() {
           customers={customers}
           customerId={customerId}
           onCustomerChange={(id) => {
+            if (id === customerId) return;
             setCustomerId(id);
-            setInput("");
+            // Scenarios are member-specific, so the thread resets with the member.
+            resetConversation();
           }}
+
           activeCustomer={activeCustomer}
           onReset={resetConversation}
           canReset={messages.length > 0}
@@ -520,13 +598,16 @@ function EmptyState({
       </p>
 
       <div className="mt-8">
-        <div className="label-caps mb-3 text-muted-foreground">Demo scenarios</div>
+        <div className="label-caps mb-3 text-muted-foreground">
+          Demo scenarios
+          {member ? ` · ${formatMember(labelMode, member.customerId, member.memberName)}` : ""}
+        </div>
         <p className="mb-3 text-[12px] text-muted-foreground">
-          All scenarios run as the same member
-          {member ? ` — ${formatMember(labelMode, member.customerId, member.memberName)}` : ""}. Her
-          three policies produce a different outcome depending on what she asks about. Picking one
+          {scenarios.length} scenario{scenarios.length === 1 ? "" : "s"} drawn from this member's
+          own policy record. Switch member in the top bar to see a different set. Picking one
           starts a fresh conversation and sends that question.
         </p>
+
         <div className="grid gap-2 sm:grid-cols-2">
           {scenarios.map((scenario) => (
             <button
@@ -537,24 +618,12 @@ function EmptyState({
               className="group rounded-lg border border-border bg-card p-3.5 text-left transition-colors hover:border-accent hover:bg-card/80 disabled:opacity-50"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[13px] font-semibold text-foreground">
-                  {labelMode === "name" ? (
-                    scenario.memberName
-                  ) : (
-                    <>
-                      <span className="font-mono font-normal text-muted-foreground">
-                        {scenario.customerId}
-                      </span>
-                      {labelMode === "both" && scenario.memberName
-                        ? ` · ${scenario.memberName}`
-                        : ""}
-                    </>
-                  )}
-                </span>
+                <span className="text-[13px] font-semibold text-foreground">{scenario.label}</span>
                 <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
-                  {scenario.label}
+                  {formatMember(labelMode, scenario.customerId, scenario.memberName)}
                 </span>
               </div>
+
               <div className="mt-1 text-[12px] text-muted-foreground">{scenario.hint}</div>
 
               <div className="mt-2 line-clamp-2 text-[12px] italic leading-snug text-muted-foreground/80">
