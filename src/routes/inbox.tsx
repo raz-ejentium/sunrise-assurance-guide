@@ -40,13 +40,27 @@ export const Route = createFileRoute("/inbox")({
 });
 
 const REASON_LABELS: Record<string, string> = {
+  conflicting_policy_coverage: "Conflicting policy coverage",
   conflicting_policies: "Conflicting policies",
   unknown_treatment: "Unknown treatment",
+  ambiguous_identity: "Ambiguous identity",
   ambiguous_coverage: "Ambiguous coverage",
+  inside_waiting_period: "Inside waiting period",
+  rider_status_unknown: "Rider status unknown",
+  policy_not_active: "Policy not active",
   policy_inactive: "Policy inactive",
+  missing_reference_data: "Missing reference data",
   customer_request: "Member asked for a human",
   out_of_scope: "Out of scope",
 };
+
+function reasonLabel(code: string): string {
+  const known = REASON_LABELS[code];
+  if (known) return known;
+  const words = code.replace(/[_-]+/g, " ").trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : code;
+}
+
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   open: { label: "Open", className: "border-warning/40 bg-warning/10 text-warning" },
