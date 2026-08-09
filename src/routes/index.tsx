@@ -322,10 +322,8 @@ function ClaimsAssistant() {
           onChange={setInput}
           onSubmit={() => submit(input)}
           isLoading={isLoading}
-          scenarios={scenarios}
-          onScenario={runScenario}
-          activeScenarioKey={activeScenarioKey}
-          labelMode={labelMode}
+        />
+
 
         />
       </section>
