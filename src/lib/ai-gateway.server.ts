@@ -52,7 +52,9 @@ async function peekForContent(response: Response): Promise<
       return null;
     }
     buffered.push(chunk.value);
-    if (isMeaningfulSseChunk(decoder.decode(chunk.value, { stream: true }))) {
+    const decoded = decoder.decode(chunk.value, { stream: true });
+    console.log("[ai-gateway][peek]", JSON.stringify(decoded).slice(0, 400));
+    if (isMeaningfulSseChunk(decoded)) {
       return { buffered, reader };
     }
   }
