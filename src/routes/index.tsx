@@ -442,22 +442,37 @@ function SessionBar({
 
 
       {activeCustomer && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {activeCustomer.policies.map((policy) => (
-            <span
-              key={policy.id}
-              className={`rounded-full border px-2.5 py-0.5 text-[11px] ${
-                policy.status === "active"
-                  ? "border-border bg-card text-foreground"
-                  : "border-destructive/40 bg-destructive/10 text-destructive"
-              }`}
-            >
-              <span className="font-mono">{policy.id}</span> · {policy.policy_type}
-              {policy.status !== "active" && ` · ${policy.status}`}
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/70 border-l-2 border-l-accent bg-muted/40 py-1 pl-2.5 pr-3">
+          <span className="label-caps text-muted-foreground">
+            Policies
+            <span className="ml-1 font-mono text-[10px] text-accent">
+              {activeCustomer.policies.length}
             </span>
-          ))}
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {activeCustomer.policies.map((policy) => (
+              <span
+                key={policy.id}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] ${
+                  policy.status === "active"
+                    ? "border-border bg-card text-foreground"
+                    : "border-destructive/40 bg-destructive/10 text-destructive"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className={`size-1.5 rounded-full ${
+                    policy.status === "active" ? "bg-accent" : "bg-destructive"
+                  }`}
+                />
+                <span className="font-mono">{policy.id}</span> · {policy.policy_type}
+                {policy.status !== "active" && ` · ${policy.status}`}
+              </span>
+            ))}
+          </div>
         </div>
       )}
+
 
       <div className="ml-auto flex items-center gap-3">
         {canReset && (
