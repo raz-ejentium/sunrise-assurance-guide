@@ -500,6 +500,12 @@ function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: 
         </div>
       )}
 
+      {blocks.map((block) => (
+        <div key={block.key} className="prose-claims max-w-none text-[14.5px] text-foreground">
+          <ReactMarkdown>{cleanAssistantText(block.text)}</ReactMarkdown>
+        </div>
+      ))}
+
       {escalations.map((escalation) => (
         <EscalationCard
           key={escalation.reference_number}
@@ -508,11 +514,6 @@ function MessageBlock({ message, onRestart }: { message: UIMessage; onRestart?: 
         />
       ))}
 
-      {blocks.map((block) => (
-        <div key={block.key} className="prose-claims max-w-none text-[14.5px] text-foreground">
-          <ReactMarkdown>{block.text}</ReactMarkdown>
-        </div>
-      ))}
     </div>
   );
 }
