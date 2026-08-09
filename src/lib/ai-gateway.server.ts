@@ -94,7 +94,10 @@ function replayStream(
 }
 
 
-export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
+export function createLovableAiGatewayRunIdFetch(
+  initialRunId?: string,
+  extraBody?: Record<string, unknown>,
+) {
   let runId = initialRunId?.trim() || undefined;
   let resolveRunId: (value: string | undefined) => void = () => {};
   let runIdResolved = false;
@@ -134,7 +137,7 @@ export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
 
       for (let attempt = 0; ; attempt++) {
         try {
-          const response = await fetch(input, { ...init, body, headers });
+          const response = await fetch(input, { ...init, body: body ?? null, headers });
           publishRunId(response.headers.get(LOVABLE_AIG_RUN_ID_HEADER) ?? undefined);
 
           if (!isRetryable || !response.ok || !response.body) return response;
@@ -170,8 +173,12 @@ export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
   };
 }
 
-export function createLovableAiGatewayProvider(lovableApiKey: string, initialRunId?: string) {
-  const runIdFetch = createLovableAiGatewayRunIdFetch(initialRunId);
+export function createLovableAiGatewayProvider(
+  lovableApiKey: string,
+  initialRunId?: string,
+  extraBody?: Record<string, unknown>,
+) {
+  const runIdFetch = createLovableAiGatewayRunIdFetch(initialRunId, extraBody);
 
   const provider = createOpenAICompatible({
     name: "lovable",
