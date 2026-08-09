@@ -144,6 +144,8 @@ function InboxPage() {
                 <span className="rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[11px] font-medium text-warning">
                   {REASON_LABELS[item.reason_code] ?? item.reason_code}
                 </span>
+                <StatusBadge status={item.status} />
+
                 <span className="text-[12.5px] text-muted-foreground">
                   {item.customer_name} · <span className="font-mono">{item.customer_id}</span>
                 </span>
@@ -182,7 +184,9 @@ function InboxPage() {
             </li>
           ))}
         </ul>
+        </>
       )}
+
     </main>
   );
 }
