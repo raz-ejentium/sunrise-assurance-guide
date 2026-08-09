@@ -207,6 +207,14 @@ function ClaimsAssistant() {
     void sendMessage({ text: pending.prompt });
   }, [pending, customerId, sendMessage]);
 
+  const scenarios: Scenario[] = useMemo(
+    () =>
+      SCENARIOS.map((scenario) => {
+        const memberName = customers.find((c) => c.id === scenario.customerId)?.name;
+        return memberName ? { ...scenario, memberName } : scenario;
+      }),
+    [customers],
+  );
 
   return (
     <main className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -224,7 +232,7 @@ function ClaimsAssistant() {
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
           <div className="mx-auto max-w-3xl">
             {messages.length === 0 ? (
-              <EmptyState scenarios={SCENARIOS} onRun={runScenario} />
+              <EmptyState scenarios={scenarios} onRun={runScenario} disabled={isLoading} />
             ) : (
               <div className="space-y-6">
                 {messages.map((message) => (
@@ -242,10 +250,11 @@ function ClaimsAssistant() {
           onChange={setInput}
           onSubmit={() => submit(input)}
           isLoading={isLoading}
-          scenarios={SCENARIOS}
+          scenarios={scenarios}
           onScenario={runScenario}
         />
       </section>
+
 
       <div className="hidden min-h-0 lg:block">
         <TracePanel entries={trace} />
