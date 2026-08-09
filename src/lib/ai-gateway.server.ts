@@ -121,15 +121,24 @@ export function createLovableAiGatewayRunIdFetch(initialRunId?: string) {
         headers.set(LOVABLE_AIG_RUN_ID_HEADER, runId);
       }
 
-      const isRetryable = typeof init?.body === "string";
-      if (typeof init?.body === "string") console.log("[ai-gateway][body]", init.body.replace(/"content":"[^"]{0,20000}"/g, '"content":"..."').slice(-500));
+      let body = init?.body;
+      if (extraBody && typeof body === "string") {
+        try {
+          body = JSON.stringify({ ...(JSON.parse(body) as object), ...extraBody });
+        } catch {
+          // Leave the body untouched if it isn't JSON.
+        }
+      }
+
+      const isRetryable = typeof body === "string";
 
       for (let attempt = 0; ; attempt++) {
         try {
-          const response = await fetch(input, { ...init, headers });
+          const response = await fetch(input, { ...init, body, headers });
           publishRunId(response.headers.get(LOVABLE_AIG_RUN_ID_HEADER) ?? undefined);
 
           if (!isRetryable || !response.ok || !response.body) return response;
+
 
           const peeked = await peekForContent(response);
           if (peeked) {
