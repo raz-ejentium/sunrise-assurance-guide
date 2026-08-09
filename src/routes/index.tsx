@@ -318,7 +318,7 @@ function SessionBar({
           <SelectContent>
             {customers.map((customer) => (
               <SelectItem key={customer.id} value={customer.id}>
-                {customer.name} · {customer.id}
+                <span className="font-mono">{customer.id}</span> · {customer.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -402,7 +402,10 @@ function EmptyState({
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="text-[13px] font-semibold text-foreground">
-                  {scenario.memberName ?? scenario.customerId}
+                  <span className="font-mono font-normal text-muted-foreground">
+                    {scenario.customerId}
+                  </span>
+                  {scenario.memberName ? ` · ${scenario.memberName}` : ""}
                 </span>
                 <span className="shrink-0 rounded-full border border-border bg-parchment px-2 py-0.5 text-[10.5px] uppercase tracking-wide text-muted-foreground">
                   {scenario.label}
@@ -580,7 +583,9 @@ function Composer({
                     : "border-border bg-card text-muted-foreground hover:border-accent hover:text-foreground"
                 }`}
               >
-                {scenario.memberName ?? scenario.customerId} · {scenario.label.toLowerCase()}
+                <span className="font-mono">{scenario.customerId}</span>
+                {scenario.memberName ? ` · ${scenario.memberName}` : ""}
+                <span className="hidden sm:inline"> — {scenario.label.toLowerCase()}</span>
               </button>
             );
           })}
