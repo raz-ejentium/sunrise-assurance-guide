@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
+import { useMemo } from "react";
+
 
 import { listEscalations } from "@/lib/demo.functions";
 import { AuthGate } from "@/components/auth/AuthGate";
